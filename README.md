@@ -1,16 +1,16 @@
 # Sodoku_Game
 
-##  Giới thiệu chung
+##  1.Giới thiệu chung
 
-##  Mục tiêu đề tài
+##  2.Mục tiêu đề tài
 
-##  Công nghệ và môi trường
+##  3.Công nghệ và môi trường
 
-##  Yêu cầu hệ thống
+##  4.Yêu cầu hệ thống
 
-###  **Yêu cầu chức năng**
-###  **Yêu cầu phi chức năng**
+###  4.1.**Yêu cầu chức năng**
+###  4.2.**Yêu cầu phi chức năng**
 
-##  Kiến trúc hệ thống
+##  5.Kiến trúc hệ thống
 
-##  Sơ đồ 
+##  6.Sơ đồ 
