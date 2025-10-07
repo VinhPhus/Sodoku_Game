@@ -182,5 +182,254 @@ Kiến trúc Client–Server: Dễ mở rộng lên hệ thống nhiều phòng,
 ---
 
 ##  5.Kiến trúc hệ thống
+### 5.1 Tổng quan kiến trúc
+
+  Hệ thống theo mô hình Client – Server real-time bằng WebSocket.
+  
+  🖥️ Client (React / HTML / JS)
+  
+  Kết nối WebSocket tới Server.
+  
+  Hiển thị board Sudoku, đồng hồ, gửi request (challenge, move, complete).
+  
+  Gọi REST API cho login / history.
+  
+  ⚙️ Server (FastAPI + Uvicorn, asyncio)
+  
+  WebSocket Gateway: nhận/đẩy message real-time.
+  
+  Matchmaker / Room Manager: ghép cặp, tạo phòng.
+  
+  Game Engine: sinh & kiểm tra Sudoku, quản lý lượt, tính điểm.
+  
+  Session / Timer Manager: quản lý thời gian mỗi lượt và tổng thời gian.
+  
+  Persistence Layer: lưu lịch sử (SQLite cho dev, PostgreSQL cho production).
+  
+  Cache / Broker (Redis): dùng khi scale (pub/sub, shared state, session store).
+  
+  ☁️ Infrastructure
+  
+  Load balancer / Reverse proxy: Nginx.
+  
+  Containers: Docker; K8s / PaaS (Render, Railway) khi cần.
+  
+  Observability: logging, metrics, alerting.
+
+### 5.2 Các module chính & trách nhiệm
+  #### 1. WebSocket Gateway
+  
+  Endpoint WS (vd: /ws?token=...) xác thực JWT trước khi kết nối.
+  
+  Mỗi kết nối ánh xạ tới PlayerSession (in-memory hoặc Redis).
+  
+  Chuyển message JSON tới Room Manager.
+  
+  #### 2. Authentication / API
+  
+  REST endpoints: /login, /history, /profile.
+  
+  WebSocket auth: truyền token trong query hoặc message đầu; server xác thực quyền.
+  
+  #### 3. Matchmaker / Room Manager
+  
+  Tạo room khi 2 người chơi chấp nhận thách đấu.
+  
+  Gán match_id, sinh MatchState chứa board, turn, timers, players.
+  
+  Dùng asyncio.Lock để serialize xử lý move.
+  
+ #### 4. Game Engine
+  
+  Sinh board (theo độ khó), gửi bản giống nhau cho cả 2 client.
+  
+  Kiểm tra hợp lệ của move (row, col, subgrid).
+  
+  Cập nhật state, tính think_ms, broadcast kết quả.
+  
+  Khi hoàn tất: so sánh thời gian → declare winner.
+  
+  #### 5. Timer Manager
+  
+  Mỗi trận có:
+  
+  per_move_timeout (vd: 60s)
+  
+  total_thinking_time/player
+  
+  Timer chạy server-side, gửi timer_update định kỳ.
+  
+  Nếu timeout → xử thua hoặc bỏ lượt.
+  
+  #### 6. Persistence Layer
+  
+  ORM: SQLAlchemy (User, Match, Move).
+  
+  Lưu moves, timestamps, think_ms, winner, start/end time.
+  
+  #### 7. Redis (khi scale)
+  
+  Pub/Sub: broadcast event giữa nhiều instance.
+  
+  Shared state: match metadata ngắn hạn.
+  
+  Session store: hỗ trợ reconnect.
+
+  ### 5.3 Luồng thông điệp chính
+ #### 🔸 A. Tạo trận (Challenge Flow)
+1. Client A → Server:
+{ "type": "challenge_request", "from": "A", "to": "B" }
+
+2. Server → B
+3. B → Server:
+{ "type": "challenge_response", "accept": true }
+
+4. Server tạo match_id, sinh board:
+{ 
+  "type": "game_start", 
+  "match_id": "uuid", 
+  "board": "base64/JSON", 
+  "turn": "A", 
+  "per_move_ms": 60000 
+}
+
+#### 🔸 B. Đi nước & đồng bộ (Move Flow)
+1. Player → Server:
+{ "type": "move", "match_id": "uuid", "player": "A", "r": 0, "c": 1, "v": 5 }
+
+2. Server:
+- Kiểm tra lượt hợp lệ.
+- Validate move bằng Game Engine.
+- Cập nhật board, lưu move.
+- Broadcast move_result + next_turn.
+
+#### 🔸 C. Hoàn thành / Kết thúc
+
+Player nhấn complete.
+
+Server validate toàn bộ board.
+
+Nếu hợp lệ → declare winner, lưu kết quả, gửi game_end.
+
+### 5.4 Cơ chế đồng bộ & xử lý race conditions
+
+Dùng per-match asyncio.Lock để tránh race.
+
+Server là nguồn chân lý (authoritative).
+
+Mỗi move có client_move_id để tránh duplicate.
+
+Strict turn-based → chỉ 1 move hợp lệ được chấp nhận.
+
+async with match.lock:
+    if player != match.current_turn:
+        return invalid("not your turn")
+    valid = game_engine.validate_move(...)
+    if valid:
+        match.apply_move(...)
+        await broadcast(...)
+
+### 5.5 Thiết kế Timer
+
+Server-side timer cho mỗi match/player.
+
+#### Khi bắt đầu lượt:
+
+Tạo task asyncio.create_task đếm ngược per_move_timeout.
+
+Gửi timer_update mỗi 1s hoặc khi thay đổi.
+
+#### Khi player gửi move:
+
+Hủy timer task, tính think_ms, cộng vào total_think_ms.
+
+#### Khi timeout → broadcast timeout event.
+
+### 5.6 Mô hình dữ liệu
+Table	Columns
+users	id (UUID), username, created_at
+matches	id, player_a_id, player_b_id, start_time, end_time, winner_id, initial_board (JSON), result (enum)
+moves	id, match_id, player_id, row, col, value, server_ts, think_ms, client_move_id
+match_players (optional)	match_id, player_id, total_think_ms, final_status (left/forfeit/finished)
+
+Indexes:
+
+matches(start_time)
+
+moves(match_id, server_ts)
+
+### 5.7 Kết nối, reconnect và xử lý disconnect
+
+Khi client disconnect → session offline.
+
+Giữ MatchState trong memory + Redis.
+
+Cho phép reconnect trong RECONNECT_WINDOW (60s).
+
+Nếu reconnect thành công → resume session & timer.
+
+Nếu quá hạn → xử thua.
+
+Redis lưu match metadata (players, turn, timers) để resume trên instance khác.
+
+### 5.8 Bảo mật & tính toàn vẹn
+
+WebSocket qua WSS (TLS).
+
+Xác thực bằng JWT (WS) và HTTPS (REST).
+
+Validate mọi input bằng Pydantic.
+
+Không tin client – server kiểm tra toàn bộ luật Sudoku.
+
+Rate limit WS & REST.
+
+Hash password (bcrypt).
+
+### 5.9 Scalability & triển khai
+Dev
+
+Single Uvicorn worker
+
+SQLite
+
+Prod
+
+Multi workers/containers + Nginx LB
+
+Redis cho pub/sub + shared session
+
+PostgreSQL cho lưu trữ
+
+Không cần sticky session nếu có Redis
+
+Docker + CI/CD, Alembic cho migration
+
+### 5.10 Test, Logging & Observability
+🧪 Tests
+
+Unit: Game Engine, timer logic.
+
+Integration: WS flows (challenge, move, timeout) – pytest-asyncio.
+
+🧾 Logging
+
+Structured logs (JSON): match start/end, errors.
+
+📊 Metrics & Alerting
+
+Metrics: matches/sec, message latency, active connections → Prometheus + Grafana.
+
+Alert: crash worker, Redis queue length, DB errors.
+
+### 5.11 Kết luận
+
+Server là authoritative source về board, turn, timer.
+
+Dùng per-match lock để đảm bảo nhất quán.
+
+Lưu lịch sử đầy đủ (moves + think_ms).
+
+Thiết kế bắt đầu đơn giản (in-memory + SQLite) nhưng sẵn sàng scale với Redis + Postgres.
 
 ##  6.Sơ đồ 
