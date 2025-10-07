@@ -7,16 +7,27 @@
 ##  3.Công nghệ và môi trường
 3.1. Ngôn ngữ lập trình chính
 
-Python 3.10+: Dùng cho phần Server – chịu trách nhiệm xử lý logic trò chơi, quản lý người chơi, tạo phòng đấu, kiểm tra kết quả và lưu lịch sử vào cơ sở dữ liệu.
+Python 3.10+ – Dùng cho phần Server, chịu trách nhiệm:
 
-JavaScript (ES6+): Dùng cho phần Client (Frontend) – hiển thị giao diện web Sudoku, gửi/nhận dữ liệu với Server, hiển thị thời gian và kết quả.
+Xử lý logic trò chơi.
 
-HTML5, CSS3: Dùng xây dựng bố cục và giao diện người chơi trực quan, thân thiện.
+Quản lý người chơi, tạo phòng đấu, kiểm tra kết quả.
+
+Lưu lịch sử trận đấu vào cơ sở dữ liệu.
+
+JavaScript (ES6+) – Dùng cho phần Client (Frontend):
+
+Hiển thị giao diện Sudoku.
+
+Gửi/nhận dữ liệu với Server, hiển thị thời gian và kết quả.
+
+HTML5, CSS3 – Dùng để xây dựng bố cục và giao diện người chơi trực quan, thân thiện.
+
 3.2. Kiến trúc hệ thống
 
 Hệ thống được thiết kế theo mô hình Client–Server:
 
-Server (Python FastAPI):
+🖥️ Server (Python FastAPI)
 
 Lắng nghe nhiều kết nối client thông qua WebSocket.
 
@@ -24,84 +35,91 @@ Quản lý danh sách người chơi online.
 
 Xử lý logic thách đấu, gửi bảng Sudoku, nhận và kiểm tra nước đi.
 
-Lưu kết quả và lịch sử trận đấu vào cơ sở dữ liệu (SQLite hoặc PostgreSQL).
+Lưu kết quả và lịch sử trận đấu vào SQLite hoặc PostgreSQL.
 
-Client (React/HTML/JS):
+💻 Client (React / HTML / JS)
 
-Kết nối tới Server qua WebSocket.
+Kết nối tới server qua WebSocket.
 
 Hiển thị giao diện Sudoku, đồng hồ đếm thời gian, kết quả, và thông báo.
 
-Gửi các yêu cầu (thách đấu, hoàn thành, nhập số) lên server.
+Gửi các yêu cầu như thách đấu, hoàn thành, nhập số lên server.
+
 3.3. Công nghệ và thư viện sử dụng
-a. Phần Server (Backend)
+⚙️ Phần Server (Backend)
 
-FastAPI: Framework Python hiện đại, hiệu năng cao, hỗ trợ WebSocket giúp xử lý giao tiếp thời gian thực giữa nhiều client.
+FastAPI – Framework Python hiện đại, hiệu năng cao, hỗ trợ WebSocket.
 
-Uvicorn: Web server chạy FastAPI ở chế độ bất đồng bộ (asynchronous).
+Uvicorn – Web server chạy FastAPI ở chế độ bất đồng bộ.
 
-SQLAlchemy: ORM quản lý truy cập cơ sở dữ liệu dễ dàng.
+SQLAlchemy – ORM quản lý truy cập cơ sở dữ liệu.
 
-SQLite: Cơ sở dữ liệu nhẹ, phù hợp môi trường phát triển và demo.
+SQLite – Cơ sở dữ liệu nhẹ, dễ triển khai.
 
-WebSocket (websockets hoặc fastapi[websockets]): Dùng để trao đổi dữ liệu liên tục giữa client và server mà không cần tải lại trang.
+WebSocket (websockets hoặc fastapi[websockets]) – Giao tiếp liên tục giữa client và server.
 
-Pydantic: Quản lý và kiểm tra dữ liệu vào/ra (request/response).
+Pydantic – Kiểm tra dữ liệu vào/ra (request/response).
 
-Logging module: Lưu nhật ký hệ thống, phục vụ theo dõi và gỡ lỗi.
+Logging – Lưu nhật ký hoạt động, hỗ trợ debug.
 
-b. Phần Client (Frontend)
+🎨 Phần Client (Frontend)
 
-ReactJS: Thư viện xây dựng giao diện web hiện đại, hỗ trợ component hóa bảng Sudoku và đồng bộ dữ liệu real-time.
+ReactJS – Xây dựng giao diện động, component hóa bảng Sudoku.
 
-Axios hoặc Fetch API: Gửi các request REST (đăng nhập, lấy lịch sử trận đấu).
+Axios / Fetch API – Gửi request REST (đăng nhập, lấy lịch sử).
 
-WebSocket API (native): Dùng để giao tiếp trực tiếp với Server khi chơi thách đấu.
+WebSocket API – Giao tiếp trực tiếp khi chơi thách đấu.
 
-Tailwind CSS / Bootstrap: Tạo giao diện Sudoku thân thiện, responsive và đẹp mắt.
+Tailwind CSS / Bootstrap – Giao diện đẹp, responsive.
 
-LocalStorage / State Management (React useState, Context): Lưu tạm thông tin người chơi, thời gian, trạng thái bảng Sudoku.
+LocalStorage / React State – Lưu thông tin người chơi và thời gian tạm thời.
+
 3.4. Môi trường phát triển
 
 Hệ điều hành: Windows 10/11, macOS hoặc Ubuntu 20.04+.
 
-Trình soạn thảo mã nguồn: Visual Studio Code hoặc PyCharm.
+IDE / Editor: Visual Studio Code, PyCharm.
 
 Công cụ quản lý gói:
 
-pip và virtualenv cho Python.
+pip, virtualenv cho Python.
 
-npm hoặc yarn cho React.
+npm, yarn cho React.
 
-Công cụ kiểm thử API: Postman hoặc Thunder Client (VSCode).
+Công cụ kiểm thử API: Postman, Thunder Client (VSCode).
 
-Công cụ quản lý mã nguồn: Git và GitHub.
+Quản lý mã nguồn: Git, GitHub.
 
-Trình duyệt hỗ trợ: Google Chrome, Microsoft Edge, Firefox.
+Trình duyệt hỗ trợ: Chrome, Edge, Firefox.
+
 3.5. Môi trường triển khai
+🖥️ Server
 
-Server có thể triển khai trên:
+Triển khai trên Render, Railway, Vercel, hoặc PythonAnywhere.
 
-Render / Railway / Vercel / PythonAnywhere cho môi trường cloud miễn phí.
+Có thể đóng gói bằng Docker để đảm bảo tính nhất quán khi triển khai.
 
-Docker container để đảm bảo tính nhất quán khi triển khai thực tế.
+🌐 Client
 
-Client (React) có thể build và triển khai tĩnh trên:
+Build và triển khai tĩnh trên Vercel, Netlify, hoặc GitHub Pages.
 
-Vercel, Netlify, hoặc GitHub Pages.
+🗄️ Cơ sở dữ liệu
 
-Database (SQLite) được đặt cùng server hoặc chuyển sang PostgreSQL khi triển khai thật.
+SQLite dùng trong giai đoạn phát triển.
+
+PostgreSQL dùng cho triển khai thực tế.
+
 3.6. Lý do chọn công nghệ
 
-Python (FastAPI): Cung cấp hiệu năng cao, dễ lập trình và tích hợp WebSocket – phù hợp xử lý nhiều kết nối cùng lúc.
+Python (FastAPI): Hiệu năng cao, dễ tích hợp WebSocket, phù hợp xử lý nhiều kết nối.
 
-ReactJS: Dễ dàng tạo giao diện động, cập nhật thời gian thực khi người chơi nhập số.
+ReactJS: Dễ tạo giao diện động, cập nhật real-time khi người chơi thao tác.
 
-WebSocket: Giúp truyền dữ liệu nhanh và liên tục giữa 2 người chơi mà không cần reload.
+WebSocket: Giúp truyền dữ liệu nhanh và liên tục giữa hai người chơi.
 
-SQLite / PostgreSQL: Giúp lưu lịch sử trận đấu và dễ mở rộng trong tương lai.
+SQLite / PostgreSQL: Lưu lịch sử trận đấu và dễ mở rộng.
 
-Kiến trúc Client–Server: Giúp mở rộng lên hệ thống đa phòng, thêm chat hoặc bảng xếp hạng dễ dàng sau này.
+Kiến trúc Client–Server: Dễ mở rộng lên hệ thống nhiều phòng, chat hoặc bảng xếp hạng trong tương lai.
 
 ##  4.Yêu cầu hệ thống
 
