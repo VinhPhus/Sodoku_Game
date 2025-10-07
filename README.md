@@ -5,7 +5,7 @@
 ##  2.Mục tiêu đề tài
 
 ##  3.Công nghệ và môi trường
-# 3.1. Ngôn ngữ lập trình chính
+### 3.1. Ngôn ngữ lập trình chính
 
 Python 3.10+ – Dùng cho phần Server, chịu trách nhiệm:
 
@@ -23,7 +23,7 @@ Gửi/nhận dữ liệu với Server, hiển thị thời gian và kết quả.
 
 HTML5, CSS3 – Dùng để xây dựng bố cục và giao diện người chơi trực quan, thân thiện.
 
-# 3.2. Kiến trúc hệ thống
+### 3.2. Kiến trúc hệ thống
 
 Hệ thống được thiết kế theo mô hình Client–Server:
 
@@ -45,7 +45,7 @@ Hiển thị giao diện Sudoku, đồng hồ đếm thời gian, kết quả, v
 
 Gửi các yêu cầu như thách đấu, hoàn thành, nhập số lên server.
 
-# 3.3. Công nghệ và thư viện sử dụng
+### 3.3. Công nghệ và thư viện sử dụng
 ⚙️ Phần Server (Backend)
 
 FastAPI – Framework Python hiện đại, hiệu năng cao, hỗ trợ WebSocket.
@@ -74,7 +74,7 @@ Tailwind CSS / Bootstrap – Giao diện đẹp, responsive.
 
 LocalStorage / React State – Lưu thông tin người chơi và thời gian tạm thời.
 
-# 3.4. Môi trường phát triển
+### 3.4. Môi trường phát triển
 
 Hệ điều hành: Windows 10/11, macOS hoặc Ubuntu 20.04+.
 
@@ -92,7 +92,7 @@ Quản lý mã nguồn: Git, GitHub.
 
 Trình duyệt hỗ trợ: Chrome, Edge, Firefox.
 
-# 3.5. Môi trường triển khai
+### 3.5. Môi trường triển khai
 🖥️ Server
 
 Triển khai trên Render, Railway, Vercel, hoặc PythonAnywhere.
@@ -109,7 +109,7 @@ SQLite dùng trong giai đoạn phát triển.
 
 PostgreSQL dùng cho triển khai thực tế.
 
-# 3.6. Lý do chọn công nghệ
+### 3.6. Lý do chọn công nghệ
 
 Python (FastAPI): Hiệu năng cao, dễ tích hợp WebSocket, phù hợp xử lý nhiều kết nối.
 
