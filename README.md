@@ -1,6 +1,9 @@
 # Sodoku_Game
 
 ##  1.Giới thiệu chung
+Sudoku là trò chơi logic sắp xếp chữ số, ra đời tại Mỹ vào thập niên 1970 với tên gọi “Number Place” do Howard Gans sáng tạo.Trò chơi yêu cầu người chơi điền các con số từ 1 đến 9 vào một bảng 9x9 sao cho mỗi hàng, mỗi cột và mỗi khối 3x3 đều chứa đủ các số từ 1 đến 9 mà không bị trùng lặp.
+ Dự án “Lập trình game cờ Sodoku” được xây dựng nhằm mô phỏng trò chơi Sudoku dưới dạng một ứng dụng mạng. Thông qua mô hình Client–Server, hai người chơi (client) có thể kết nối tới cùng một server để thách đấu với nhau trong thời gian thực. Mỗi trận đấu có cơ chế tính thời gian suy nghĩ, giúp tăng tính cạnh tranh và rèn luyện khả năng tư duy logic của người chơi.
+
 
 ##  2.Mục tiêu đề tài
 
