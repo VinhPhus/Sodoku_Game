@@ -1,5 +1,3 @@
-<img width="467" height="491" alt="image" src="https://github.com/user-attachments/assets/a64e60e6-a8fe-4e56-ab9d-7835c055e21f" /># Sodoku_Game
-
 ##  1.Giới thiệu chung
 Sudoku là trò chơi logic sắp xếp chữ số, ra đời tại Mỹ vào thập niên 1970 với tên gọi “Number Place” do Howard Gans sáng tạo.Trò chơi yêu cầu người chơi điền các con số từ 1 đến 9 vào một bảng 9x9 sao cho mỗi hàng, mỗi cột và mỗi khối 3x3 đều chứa đủ các số từ 1 đến 9 mà không bị trùng lặp.
  Dự án “Lập trình game cờ Sodoku” được xây dựng nhằm mô phỏng trò chơi Sudoku dưới dạng một ứng dụng mạng. Thông qua mô hình Client–Server, hai người chơi (client) có thể kết nối tới cùng một server để thách đấu với nhau trong thời gian thực. Mỗi trận đấu có cơ chế tính thời gian suy nghĩ, giúp tăng tính cạnh tranh và rèn luyện khả năng tư duy logic của người chơi.
@@ -456,7 +454,8 @@ Thiết kế bắt đầu đơn giản (in-memory + SQLite) nhưng sẵn sàng s
 ##  6.Sơ đồ 
 
 <img width="467" height="491" alt="image" src="https://github.com/user-attachments/assets/db4a9535-d9e9-4226-9812-836426ec5776" />
-sơ đồ hệ thống sudoku
+
+Sơ đồ hệ thống sudoku
 
 **Mô tả sơ đồ**
 
