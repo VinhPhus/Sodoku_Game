@@ -490,3 +490,4 @@ Mô tả sơ đồ
 •	Timer server-side: tránh gian lận, đảm bảo công bằng.
 •	Persistence đầy đủ: lưu tất cả moves + thời gian để có thể thống kê hoặc replay.
 •	Khả năng mở rộng: dễ nâng cấp lên multi-room, chat, leaderboard.
+
