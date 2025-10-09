@@ -453,15 +453,19 @@ Lưu lịch sử đầy đủ (moves + think_ms).
 
 Thiết kế bắt đầu đơn giản (in-memory + SQLite) nhưng sẵn sàng scale với Redis + Postgres.
 
-##  6.Sơ đồ 
-
+##  6.Sơ đồ p
 Mô tả sơ đồ
-	1.	Client (React/JS UI)
-	•	Mỗi người chơi có giao diện Sudoku 9x9.
-	•	Kết nối WebSocket tới server để gửi/nhận move, thách đấu, kết quả.
-	•	Dùng REST API để đăng nhập và lấy lịch sử trận đấu.
-	•	Có timer hiển thị thời gian suy nghĩ.
-	2.	WebSocket Gateway (FastAPI)
+1.	Client (React/JS UI)
+
+•	Mỗi người chơi có giao diện Sudoku 9x9.
+
+•	Kết nối WebSocket tới userver để gửi/nhận move, thách đấu, kết quả.
+
+•	Dùng REST API để đăng nhập và lấy lịch sử trận đấu.
+
+•	Có timer hiển thị thời gian suy nghĩ.
+
+2.	WebSocket Gateway (FastAPI)
 	•	Trung gian nhận/gửi message real-time từ các client.
 	•	Xác thực JWT khi client kết nối.
 	3.	Các module server
