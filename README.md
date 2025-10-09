@@ -6,6 +6,27 @@ Sudoku là trò chơi logic sắp xếp chữ số, ra đời tại Mỹ vào th
 
 
 ##  2.Mục tiêu đề tài
+Mục tiêu đề tài
+Đề tài hướng đến việc nghiên cứu và phát triển ứng dụng trò chơi Sudoku theo mô hình Client–Server, nhằm hiện thực hóa khả năng tương tác trực tuyến giữa hai người chơi.
+Mục tiêu là xây dựng hệ thống có khả năng kết nối ổn định, hỗ trợ gửi và nhận yêu cầu thách đấu, theo dõi thời gian suy nghĩ của từng người chơi, đồng thời lưu trữ kết quả và lịch sử trận đấu để phục vụ mục đích thống kê và cải thiện trải nghiệm người dùng.
+
+Xây dựng hệ thống Client–Server:
+Cho phép nhiều client kết nối đồng thời đến server.
+
+
+Quản lý và điều phối các yêu cầu thách đấu giữa các người chơi.
+Phát triển cơ chế thách đấu:
+Người chơi có thể gửi và nhận lời mời thách đấu.
+
+
+Server tạo và phân phối bảng Sudoku cho cả hai người chơi.
+Theo dõi và lưu trữ lịch sử trận đấu:
+Ghi lại kết quả, thời gian, và thông tin người chơi cho từng trận.
+Tính thời gian suy nghĩ của từng người chơi:
+Đếm thời gian mỗi người trong quá trình giải để làm căn cứ xác định người chiến thắng khi cần.
+Tăng tính tương tác và học hỏi:
+Giúp người chơi vừa rèn luyện tư duy logic, vừa có môi trường thi đấu trực tiếp với người khác.
+
 
 ##  3.Công nghệ và môi trường
 ### 3.1. Ngôn ngữ lập trình chính
