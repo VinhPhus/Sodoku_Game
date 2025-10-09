@@ -456,8 +456,10 @@ Thiết kế bắt đầu đơn giản (in-memory + SQLite) nhưng sẵn sàng s
 ##  6.Sơ đồ 
 
 <img width="467" height="491" alt="image" src="https://github.com/user-attachments/assets/db4a9535-d9e9-4226-9812-836426ec5776" />
+sơ đồ hệ thống sudoku
 
-##**Mô tả sơ đồ**
+**Mô tả sơ đồ**
+
 **1.	Client (React/JS UI)**
 
 •	Mỗi người chơi có giao diện Sudoku 9x9.
