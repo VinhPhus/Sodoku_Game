@@ -457,9 +457,9 @@ Thiết kế bắt đầu đơn giản (in-memory + SQLite) nhưng sẵn sàng s
 
 Sơ đồ hệ thống sudoku
 
-**Mô tả sơ đồ**
+###**Mô tả sơ đồ**
 
-**1.	Client (React/JS UI)**
+###**6.1.	Client (React/JS UI)**
 
 •	Mỗi người chơi có giao diện Sudoku 9x9.
 
@@ -469,13 +469,13 @@ Sơ đồ hệ thống sudoku
 
 •	Có timer hiển thị thời gian suy nghĩ.
 
-**2.	WebSocket Gateway (FastAPI)**
+###**6.2.	WebSocket Gateway (FastAPI)**
 
 •	Trung gian nhận/gửi message real-time từ các client.
 
 •	Xác thực JWT khi client kết nối.
 
-**3.	Các module server**
+###**6.3.	Các module server**
 
 •	Auth / REST: xử lý đăng nhập (/login), lịch sử trận (/history).
 
@@ -485,7 +485,7 @@ Sơ đồ hệ thống sudoku
 
 •	Timer Manager: tính thời gian cho từng người chơi, phát sự kiện timeout.
 
-**4.	Persistence Layer (DB + ORM)**
+###**6.4.	Persistence Layer (DB + ORM)**
 
 •	Lưu toàn bộ thông tin: users, moves, matches, kết quả, thời gian suy nghĩ.
 
@@ -493,7 +493,7 @@ Sơ đồ hệ thống sudoku
 
 •	Redis hỗ trợ khi hệ thống scale (pub/sub, lưu state, reconnect).
 
-**5.	Luồng chính**
+###**6.5.	Luồng chính**
 
 •	Đăng nhập: Client → REST /login → Server xác thực → trả JWT.
 
@@ -503,7 +503,7 @@ Sơ đồ hệ thống sudoku
 
 •	Kết thúc: Người chơi bấm “Hoàn thành” → Server check → xác định thắng/thua → lưu DB → gửi game_end.
 
-**Điểm nổi bật**
+###**Điểm nổi bật**
 
 •	Server là nguồn chân lý (authoritative): chỉ server mới quyết định move hợp lệ và kết quả.
 
