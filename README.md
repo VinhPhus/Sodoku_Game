@@ -454,7 +454,9 @@ Lưu lịch sử đầy đủ (moves + think_ms).
 Thiết kế bắt đầu đơn giản (in-memory + SQLite) nhưng sẵn sàng scale với Redis + Postgres.
 
 ##  6.Sơ đồ 
+
 <img width="467" height="491" alt="image" src="https://github.com/user-attachments/assets/db4a9535-d9e9-4226-9812-836426ec5776" />
+
 Mô tả sơ đồ
 1.	Client (React/JS UI)
 •	Mỗi người chơi có giao diện Sudoku 9x9.
