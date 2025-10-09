@@ -456,35 +456,34 @@ Thiết kế bắt đầu đơn giản (in-memory + SQLite) nhưng sẵn sàng s
 ##  6.Sơ đồ p
 Mô tả sơ đồ
 1.	Client (React/JS UI)
-
 •	Mỗi người chơi có giao diện Sudoku 9x9.
-
 •	Kết nối WebSocket tới userver để gửi/nhận move, thách đấu, kết quả.
-
 •	Dùng REST API để đăng nhập và lấy lịch sử trận đấu.
-
 •	Có timer hiển thị thời gian suy nghĩ.
 
 2.	WebSocket Gateway (FastAPI)
-	•	Trung gian nhận/gửi message real-time từ các client.
-	•	Xác thực JWT khi client kết nối.
-	3.	Các module server
-	•	Auth / REST: xử lý đăng nhập (/login), lịch sử trận (/history).
-	•	Matchmaker / Room Manager: quản lý danh sách người chơi, ghép cặp, tạo phòng đấu.
-	•	Game Engine: sinh bảng Sudoku, kiểm tra hợp lệ nước đi, broadcast kết quả.
-	•	Timer Manager: tính thời gian cho từng người chơi, phát sự kiện timeout.
-	4.	Persistence Layer (DB + ORM)
-	•	Lưu toàn bộ thông tin: users, moves, matches, kết quả, thời gian suy nghĩ.
-	•	SQLite cho giai đoạn phát triển, PostgreSQL cho triển khai thật.
-	•	Redis hỗ trợ khi hệ thống scale (pub/sub, lưu state, reconnect).
-	5.	Luồng chính
-	•	Đăng nhập: Client → REST /login → Server xác thực → trả JWT.
-	•	Thách đấu: Client A gửi challenge → Server → chuyển cho Client B → B chấp nhận → tạo phòng → gửi board Sudoku giống nhau cho cả hai.
-	•	Chơi game: Người chơi nhập số → gửi move qua WS → Server validate → cập nhật state → broadcast lại. Timer luôn chạy server-side.
-	•	Kết thúc: Người chơi bấm “Hoàn thành” → Server check → xác định thắng/thua → lưu DB → gửi game_end.
+•	Trung gian nhận/gửi message real-time từ các client.
+•	Xác thực JWT khi client kết nối.
+
+3.	Các module server
+•	Auth / REST: xử lý đăng nhập (/login), lịch sử trận (/history).
+•	Matchmaker / Room Manager: quản lý danh sách người chơi, ghép cặp, tạo phòng đấu.
+•	Game Engine: sinh bảng Sudoku, kiểm tra hợp lệ nước đi, broadcast kết quả.
+•	Timer Manager: tính thời gian cho từng người chơi, phát sự kiện timeout.
+
+4.	Persistence Layer (DB + ORM)
+•	Lưu toàn bộ thông tin: users, moves, matches, kết quả, thời gian suy nghĩ.
+•	SQLite cho giai đoạn phát triển, PostgreSQL cho triển khai thật.
+•	Redis hỗ trợ khi hệ thống scale (pub/sub, lưu state, reconnect).
+
+5.	Luồng chính
+•	Đăng nhập: Client → REST /login → Server xác thực → trả JWT.
+•	Thách đấu: Client A gửi challenge → Server → chuyển cho Client B → B chấp nhận → tạo phòng → gửi board Sudoku giống nhau cho cả hai.
+•	Chơi game: Người chơi nhập số → gửi move qua WS → Server validate → cập nhật state → broadcast lại. Timer luôn chạy server-side.
+•	Kết thúc: Người chơi bấm “Hoàn thành” → Server check → xác định thắng/thua → lưu DB → gửi game_end.
 
 Điểm nổi bật
-	•	Server là nguồn chân lý (authoritative): chỉ server mới quyết định move hợp lệ và kết quả.
-	•	Timer server-side: tránh gian lận, đảm bảo công bằng.
-	•	Persistence đầy đủ: lưu tất cả moves + thời gian để có thể thống kê hoặc replay.
-	•	Khả năng mở rộng: dễ nâng cấp lên multi-room, chat, leaderboard.
+•	Server là nguồn chân lý (authoritative): chỉ server mới quyết định move hợp lệ và kết quả.
+•	Timer server-side: tránh gian lận, đảm bảo công bằng.
+•	Persistence đầy đủ: lưu tất cả moves + thời gian để có thể thống kê hoặc replay.
+•	Khả năng mở rộng: dễ nâng cấp lên multi-room, chat, leaderboard.
