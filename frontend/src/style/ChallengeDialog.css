@@ -1,0 +1,236 @@
+/* --- BIẾN MÀU (CSS VARIABLES) --- */
+/* Việc dùng biến giúp bạn thay đổi toàn bộ giao diện chỉ bằng cách sửa ở một nơi */
+:root {
+  --primary-green: #28a745;
+  --primary-green-hover: #218838;
+  --accent-red: #dc2626;
+  --accent-red-hover: #b91c1c;
+  --accent-blue: #007aff;
+  --background-overlay: rgba(0, 0, 0, 0.6);
+  --background-dialog: #ffffff;
+  --text-primary: #1c1e21;
+  --border-color: #e5e7eb;
+  --box-shadow-light: rgba(0, 0, 0, 0.2);
+  --box-shadow-heavy: rgba(0, 0, 0, 0.25);
+}
+
+/* --- LỚP BAO BỌC & NỀN MỜ --- */
+.challenge-overlay {
+  position: fixed;
+  inset: 0; /* Cách viết gọn cho top, right, bottom, left = 0 */
+  background-color: var(--background-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+  padding: 1rem;
+}
+
+/* --- HỘP THOẠI CHÍNH --- */
+.challenge-dialog {
+  background-color: var(--background-dialog);
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: 0 1.25rem 2.5rem var(--box-shadow-heavy);
+  padding: 2rem; /* 32px */
+  max-width: 600px;
+  width: 100%;
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* --- HEADER & TIÊU ĐỀ --- */
+.challenge-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem; /* 32px */
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem; /* 16px */
+  width: 100%;
+}
+
+.challenge-title {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.challenger-name {
+  color: var(--accent-blue);
+  font-weight: 700;
+}
+
+/* --- BỘ ĐẾM NGƯỢC VÒNG TRÒN --- */
+.countdown-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.progress-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.progress-ring-background,
+.progress-ring-fill {
+  fill: transparent;
+  stroke-width: 4;
+}
+
+.progress-ring-background {
+  stroke: var(--border-color);
+}
+
+.progress-ring-fill {
+  stroke: var(--accent-red); /* Đặt màu đỏ cho vòng chạy */
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.countdown-number {
+  position: absolute;
+  font-size: 1.125rem; /* 18px */
+  font-weight: 700;
+  color: var(--accent-red);
+}
+
+/* --- PHẦN SO KÈ (VS) --- */
+.vs-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem; /* 40px */
+  margin-bottom: 2.5rem;
+}
+
+.player-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem; /* 12px */
+}
+
+.player-avatar-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border-color);
+}
+
+.vs-text {
+  font-size: 3rem; /* 48px */
+  font-weight: 900;
+  color: var(--text-primary);
+  text-shadow: 2px 2px 4px var(--box-shadow-light);
+}
+
+.player-name {
+  font-size: 1rem; /* 16px */
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+/* --- CÁC NÚT HÀNH ĐỘNG --- */
+.action-buttons {
+  display: flex;
+  gap: 1rem; /* 16px */
+  justify-content: center;
+}
+
+.accept-button,
+.decline-button {
+  padding: 1rem 2rem; /* 16px 32px */
+  border: none;
+  border-radius: 0.75rem; /* 12px */
+  font-size: 1.125rem; /* 18px */
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+  min-width: 150px;
+  text-transform: uppercase;
+}
+/* Hỗ trợ tiếp cận: Hiển thị viền khi dùng bàn phím */
+.accept-button:focus-visible,
+.decline-button:focus-visible {
+  outline: 3px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.accept-button {
+  background-color: var(--primary-green);
+  color: white;
+}
+
+.accept-button:hover {
+  background-color: var(--primary-green-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(40, 167, 69, 0.3);
+}
+
+.decline-button {
+  background-color: var(--accent-red);
+  color: white;
+}
+
+.decline-button:hover {
+  background-color: var(--accent-red-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(220, 38, 38, 0.3);
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 640px) {
+  .challenge-dialog {
+    padding: 1.5rem; /* 24px */
+  }
+  .vs-section {
+    gap: 1.5rem; /* 24px */
+  }
+  .player-avatar-img {
+    width: 60px;
+    height: 60px;
+  }
+  .vs-text {
+    font-size: 2.25rem; /* 36px */
+  }
+  .action-buttons {
+    flex-direction: column;
+  }
+}

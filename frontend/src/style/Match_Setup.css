@@ -1,0 +1,203 @@
+/* ---- General Setup ---- */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap");
+
+/* Cài đặt cơ bản cho toàn trang */
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- THÊM MỚI: Lớp bao bọc để căn giữa --- */
+/* Lớp này đảm bảo component MatchSetup luôn nằm giữa màn hình */
+.match-setup-screen {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f2f5;
+  padding: 20px;
+  box-sizing: border-box; /* Đảm bảo padding không làm vỡ layout */
+}
+
+/* --- THẺ CHÍNH --- */
+.battle-card {
+  width: 100%;
+  max-width: 800px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 24px 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e3e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* ---- Header ---- */
+.battle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.exit-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0f2f5;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.exit-button:hover {
+  background-color: #e4e6eb;
+}
+
+/* ---- Main Content ---- */
+.battle-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+}
+
+.status-title {
+  font-size: 28px;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+/* --- CẢI TIẾN: Thêm Animation cho bộ đếm ngược --- */
+.countdown-timer {
+  font-size: 100px;
+  font-weight: 900;
+  color: #e53e3e; /* Màu đỏ */
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+  /* Áp dụng animation */
+  animation: zoomInFade 1s ease-in-out infinite;
+}
+
+/* Định nghĩa animation */
+@keyframes zoomInFade {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Thay đổi màu sắc khi đếm về 0 và hiển thị "GO!" */
+.countdown-timer.go {
+  color: #28a745; /* Màu xanh lá cây */
+  animation: none; /* Tắt animation zoom khi đã bắt đầu */
+}
+
+/* ---- Players Section ---- */
+.players-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 20px;
+}
+
+.player-info-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background-color: #f7f9fc;
+  border: 1px solid #e3e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.player-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+}
+
+.player-status {
+  font-size: 14px;
+  color: #52c41a; /* Màu xanh lá cây cho status online */
+}
+
+.arrow-icon {
+  flex-shrink: 0;
+}
+
+/* ---- Connection Status Section ---- */
+.connection-status {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: #e3e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #4a90e2; /* Màu xanh dương */
+  border-radius: 4px;
+  transition: width 0.5s ease-in-out;
+}
+
+.connection-text {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}

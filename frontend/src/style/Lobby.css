@@ -1,0 +1,319 @@
+/* --- Global Styles for Lobby Screen --- */
+.lobby-screen {
+  background: linear-gradient(135deg, #fdfdfd 0%, #f1ecf5 100%);
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.lobby-container {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* --- Header --- */
+.lobby-header {
+  background-color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.welcome-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1c1e21;
+  margin: 0;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #606770;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #f0f2f5;
+}
+
+/* --- Main Content Layout --- */
+.main-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Cột chính 2 phần, cột phụ 1 phần */
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* --- Player List Card (Cột chính) --- */
+.player-list-card {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.player-list-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #1c1e21;
+}
+
+.player-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 8px; /* Dành không gian cho thanh cuộn */
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ebee;
+}
+
+.player-item:last-child {
+  border-bottom: none;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.player-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1c1e21;
+}
+
+.player-status {
+  font-size: 12px;
+}
+
+.status-online {
+  color: #28a745; /* Green */
+}
+
+.status-busy {
+  color: #ffc107; /* Yellow */
+}
+
+.challenge-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.challenge-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.challenge-button:disabled {
+  background-color: #a0c3ff;
+  cursor: not-allowed;
+}
+
+/* --- Sidebar (Cột phụ) --- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-card {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sidebar-text h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: #1c1e21;
+}
+
+.sidebar-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #606770;
+}
+
+.view-history-button {
+  background-color: #e7f3ff;
+  color: #007aff;
+  border: 1px solid #007aff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: auto; /* Đẩy nút về cuối */
+}
+
+.view-history-button:hover {
+  background-color: #dcebff;
+}
+
+/* --- Avatar Section --- */
+.avatar-section {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.avatar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #007aff;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+}
+
+.avatar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.avatar-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1c1e21;
+}
+
+.avatar-status {
+  margin: 0;
+  font-size: 14px;
+  color: #28a745;
+  font-weight: 500;
+}
+
+/* --- Toast Notification --- */
+.toast-notification {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: rgba(28, 30, 33, 0.9);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.toast-message {
+  margin: 0;
+  font-size: 15px;
+}
+
+.toast-button {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toast-button:hover {
+  background-color: #0056b3;
+}
+
+.toast-close-button {
+  background: none;
+  border: none;
+  color: #a8abaf;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toast-close-button:hover {
+  color: white;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
