@@ -11,3 +11,4 @@
 -Trang MatchSetup : hiển thị thời gian chờ , cái trang này kiểu trang chờ vào game
 .hiển thị tên và avatar cá nhân của mình và đối thủ
 .có thể thoát
+    

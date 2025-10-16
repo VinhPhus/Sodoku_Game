@@ -51,9 +51,9 @@ function App() {
       case "matchSetup":
         return (
           <MatchSetup
-            user={{ name: username }} // Truyền thông tin người chơi
-            opponent={opponent} // Truyền thông tin đối thủ
-            onBack={handleBackToLobby} // Truyền hàm để quay lại
+            user={{ name: username }} 
+            opponent={opponent} 
+            onBack={handleBackToLobby} 
           />
         );
       default:

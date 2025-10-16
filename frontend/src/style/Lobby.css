@@ -60,7 +60,7 @@
 /* --- Main Content Layout --- */
 .main-content {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* Cột chính 2 phần, cột phụ 1 phần */
+  grid-template-columns: 2fr 1fr; /* Bố cục 2 cột cho desktop */
   gap: 24px;
   align-items: flex-start;
 }
@@ -83,7 +83,7 @@
 .player-list {
   max-height: 60vh;
   overflow-y: auto;
-  padding-right: 8px; /* Dành không gian cho thanh cuộn */
+  padding-right: 8px;
 }
 
 .player-item {
@@ -125,11 +125,11 @@
 }
 
 .status-online {
-  color: #28a745; /* Green */
+  color: #28a745;
 }
 
 .status-busy {
-  color: #ffc107; /* Yellow */
+  color: #ffc107;
 }
 
 .challenge-button {
@@ -143,6 +143,7 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -195,7 +196,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-left: auto; /* Đẩy nút về cuối */
+  margin-left: auto;
 }
 
 .view-history-button:hover {
@@ -212,7 +213,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 16px;
+  gap: 16px; /* <-- Thuộc tính này tạo khoảng cách giữa avatar và tên */
 }
 
 .avatar-container {
@@ -239,7 +240,7 @@
 .avatar-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 4px; /* <-- Thuộc tính này tạo khoảng cách giữa tên và trạng thái */
 }
 
 .avatar-name {
@@ -315,5 +316,105 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+/* =========================================== */
+/* === RESPONSIVE STYLES FOR MOBILE & TABLET === */
+/* =========================================== */
+
+/* --- Dành cho Tablet và điện thoại màn hình lớn (dưới 992px) --- */
+@media (max-width: 992px) {
+  .main-content {
+    /* Chuyển từ 2 cột thành 1 cột */
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Dành cho hầu hết điện thoại (dưới 768px) --- */
+@media (max-width: 768px) {
+  .lobby-screen {
+    /* Giảm padding cho màn hình nhỏ */
+    padding: 16px;
+  }
+
+  .lobby-container,
+  .sidebar {
+    /* Giảm khoảng cách giữa các khối */
+    gap: 16px;
+  }
+
+  .main-content {
+    gap: 16px;
+  }
+
+  .lobby-header,
+  .player-list-card,
+  .sidebar-card,
+  .avatar-section {
+    /* Giảm padding bên trong các thẻ */
+    padding: 16px;
+  }
+
+  .welcome-text {
+    font-size: 20px;
+  }
+
+  .player-list-card h2 {
+    font-size: 18px;
+  }
+
+  .player-list {
+    /* Bỏ giới hạn chiều cao để nội dung tự nhiên hơn trên mobile */
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+/* --- Dành cho điện thoại màn hình nhỏ (dưới 480px) --- */
+@media (max-width: 480px) {
+  .lobby-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .welcome-text {
+    font-size: 18px;
+  }
+
+  .logout-button {
+    font-size: 14px;
+    align-self: flex-end; /* Đẩy nút logout về cuối bên phải */
+  }
+
+  .player-info {
+    gap: 8px;
+  }
+
+  .player-name {
+    font-size: 15px;
+  }
+
+  .challenge-button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .user-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar-name {
+    font-size: 16px; /* Điều chỉnh lại cỡ chữ cho cân đối hơn */
+  }
+
+  /* Chỉnh lại vị trí toast notification cho đẹp hơn */
+  .toast-notification {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
   }
 }
