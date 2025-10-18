@@ -2,40 +2,57 @@
 import React, { useState } from "react";
 import Login from "./components/Login";
 import Lobby from "./components/Lobby";
-import MatchSetup from "./components/MatchSetup"; // 1. Import component mới
+import MatchSetup from "./components/MatchSetup";
+import Game from "./components/Maingame";
+import MatchResult from "./components/MatchResult";
+import History from "./components/History";
 
 function App() {
-  // 2. Thêm trạng thái "matchSetup" để quản lý màn hình mới
-  const [currentScreen, setCurrentScreen] = useState("login"); // "login", "lobby", hoặc "matchSetup"
+  const [currentScreen, setCurrentScreen] = useState("login"); // "login", "lobby", "matchSetup", "game", "matchResult", "history"
+  const [previousScreen, setPreviousScreen] = useState("lobby"); // Để biết quay lại màn nào từ history
   const [username, setUsername] = useState("");
-  const [opponent, setOpponent] = useState(null); // 3. State để lưu thông tin đối thủ
+  const [opponent, setOpponent] = useState(null);
+  const [matchResult, setMatchResult] = useState(null);
 
-  // Xử lý khi đăng nhập thành công
   const handleLoginSuccess = (userName) => {
     setUsername(userName);
     setCurrentScreen("lobby");
   };
 
-  // 4. Xử lý khi người dùng chấp nhận một lời thách đấu
   const handleAcceptChallenge = (opponentInfo) => {
-    setOpponent(opponentInfo); // Lưu thông tin đối thủ
-    setCurrentScreen("matchSetup"); // Chuyển sang màn hình thiết lập trận đấu
+    setOpponent(opponentInfo);
+    setCurrentScreen("matchSetup");
   };
 
-  // Xử lý khi đăng xuất hoặc quay lại sảnh chờ
   const handleBackToLobby = () => {
-    setOpponent(null); // Xóa thông tin đối thủ
+    setOpponent(null);
     setCurrentScreen("lobby");
   };
 
-  // Xử lý khi đăng xuất hoàn toàn
   const handleLogout = () => {
     setUsername("");
     setOpponent(null);
     setCurrentScreen("login");
   };
 
-  // Hàm để render màn hình tương ứng
+  // Hàm được truyền cho MatchSetup — sẽ được gọi khi countdown = 0
+  const handleStartGame = () => {
+    setMatchResult(null); // Reset kết quả khi bắt đầu game mới
+    setCurrentScreen("game");
+  };
+
+  const handleSurrender = () => {
+    // Set kết quả: người chơi hiện tại thua
+    setMatchResult({
+      winner: opponent,
+      loser: { name: username },
+      reason: 'surrender'
+    });
+    setCurrentScreen("matchResult");
+  };
+
+
+
   const renderScreen = () => {
     switch (currentScreen) {
       case "login":
@@ -45,15 +62,59 @@ function App() {
           <Lobby
             username={username}
             onLogout={handleLogout}
-            onAcceptChallenge={handleAcceptChallenge} // 5. Truyền hàm xử lý xuống Lobby
+            onAcceptChallenge={handleAcceptChallenge}
+            onViewHistory={() => {
+              setPreviousScreen("lobby");
+              setCurrentScreen("history");
+            }}
           />
         );
       case "matchSetup":
         return (
           <MatchSetup
-            user={{ name: username }} 
-            opponent={opponent} 
-            onBack={handleBackToLobby} 
+            user={{ name: username }}
+            opponent={opponent}
+            onBack={handleBackToLobby}
+            onStartGame={handleStartGame} // <-- truyền callback ở đây
+          />
+        );
+      case "game":
+        return (
+          <Game
+            user={{ name: username }}
+            opponent={opponent}
+            onSurrender={handleSurrender}
+            onFinish={() => {
+              setMatchResult({
+                winner: { name: username },
+                loser: opponent,
+                reason: 'complete'
+              });
+              setCurrentScreen("matchResult");
+            }}
+          />
+        );
+      case "matchResult":
+        return (
+          <MatchResult
+            user={{ name: username }}
+            opponent={opponent}
+              result={matchResult}
+              onGoToLobby={() => {
+                setMatchResult(null);
+                setCurrentScreen("lobby");
+              }}
+            onViewHistory={() => {
+              setPreviousScreen("matchResult");
+              setCurrentScreen("history");
+            }}
+          />
+        );
+      case "history":
+        return (
+          <History
+            username={username}
+            onBack={() => setCurrentScreen(previousScreen)}
           />
         );
       default:

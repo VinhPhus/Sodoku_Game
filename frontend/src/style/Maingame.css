@@ -1,0 +1,500 @@
+/* =========================================== */
+/* --- Maingame.css: Main Sudoku Battle Screen --- */
+/* =========================================== */
+
+/* --- Biến màu (Dựa trên Lobby.css) --- */
+:root {
+  --text-primary: #1c1e21;
+  --bg-card: #ffffff;
+  --color-blue: #007aff;
+  --color-green: #28a745;
+  --color-red: #dc2626;
+  --color-gray-light: #f0f2f5;
+  --border-color: #e9ebee;
+  --box-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --cell-bg-empty: #f7f9fc; /* Màu nền cho ô trống/chưa điền (nhạt hơn ô mặc định) */
+}
+
+.game-screen {
+  background-color: var(--color-gray-light);
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px 24px 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+/* --- Header Game --- */
+.game-header {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-right: 20px;
+}
+
+.score-board {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: 600;
+  gap: 10px;
+  color: var(--text-primary);
+}
+
+.score-board span:nth-child(2) {
+  color: var(--color-red);
+}
+
+.timer {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-red);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.surrender-button {
+  background-color: var(--color-red);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.surrender-button:hover {
+  background-color: #a72323;
+}
+
+.menu-icon {
+  cursor: pointer;
+}
+
+
+/* --- Main Content Layout --- */
+.game-main-content {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  gap: 24px;
+  margin-top: 10px;
+}
+
+/* --- Sudoku Grid & Controls (Left) --- */
+.sudoku-section {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sudoku-grid-container {
+  background-color: var(--bg-card);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: var(--box-shadow-card);
+}
+
+/* --- Sudoku Grid --- */
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  width: 100%;
+  max-width: 600px; /* Giới hạn kích thước bàn cờ */
+  margin: 0 auto;
+  aspect-ratio: 1 / 1; /* Đảm bảo hình vuông */
+  border: 3px solid var(--text-primary);
+}
+
+.sudoku-row {
+  display: contents; /* Rất quan trọng để các ô con xếp đúng Grid 9x9 */
+}
+
+.cell {
+  border: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s;
+  position: relative;
+  /* Màu nền cho ô trống/chưa điền (màu nhạt hơn ô mặc định) */
+  background-color: var(--cell-bg-empty); 
+}
+
+/* Ô được chọn */
+.cell.selected {
+  background-color: #fffacd !important; /* Light Yellow - Overrides other background colors */
+}
+
+/* Ô có số gợi ý mặc định */
+.cell.default {
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: var(--bg-card); /* Màu nền trắng cho ô mặc định */
+}
+
+/* Ô có số do người chơi điền */
+.cell.player-input {
+  color: var(--color-blue);
+  font-weight: 600;
+}
+
+/* Ô bị sai */
+.cell.error {
+  background-color: #ffcccc !important; /* Light Red - Overrides other background colors */
+}
+
+/* Phân chia 3x3 block */
+.cell:nth-child(3n) {
+  border-right-width: 2px;
+}
+
+.cell:nth-child(9n) {
+  border-right-width: 1px;
+}
+
+.sudoku-row:nth-child(3) .cell,
+.sudoku-row:nth-child(6) .cell {
+  border-bottom-width: 3px !important;
+}
+
+.sudoku-row:nth-child(9) .cell {
+  border-bottom: 1px solid #ddd !important; /* Đảm bảo ô cuối cùng có viền dưới */
+  /* Do border: 3px solid var(--text-primary) của .sudoku-grid đã bao bọc */
+}
+
+/* Nốt bút chì (Pencil marks) */
+.pencil-marks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%; 
+    height: 100%;
+    font-size: 10px;
+    font-weight: 400;
+    color: #999;
+    line-height: 1;
+    text-align: center;
+    pointer-events: none;
+    align-items: center; 
+    justify-items: center;
+}
+
+
+/* --- Các Nút Nhập Số & Công cụ --- */
+.controls-area {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 0 15px 15px;
+}
+
+.tool-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.tool-button {
+    background-color: var(--color-gray-light);
+    border: 1px solid #ccc;
+    color: var(--text-primary);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tool-button:hover {
+    background-color: #e4e6eb;
+}
+
+.tool-button.active {
+    background-color: var(--color-blue);
+    color: white;
+    border-color: var(--color-blue);
+}
+
+.finish-button {
+    background-color: var(--color-green);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex: 1; /* Chiếm hết không gian còn lại */
+}
+
+.finish-button:hover {
+    background-color: #1e7e34;
+}
+
+/* --- Nút Số --- */
+.number-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.number-button {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    background-color: var(--bg-card);
+    border: 1px solid #ccc;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.number-button:hover {
+    background-color: var(--color-blue);
+    color: white;
+    border-color: var(--color-blue);
+}
+
+.number-button.delete-button {
+    background-color: var(--color-red);
+    color: white;
+}
+
+.number-button.delete-button:hover {
+    background-color: #a72323;
+}
+
+
+/* --- Sidebar (Right) --- */
+.game-sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- Bảng Xếp Hạng Mini --- */
+.leaderboard-card, .chat-card {
+    background-color: var(--bg-card);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--box-shadow-card);
+}
+
+.leaderboard-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.player-score-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.player-score-item:last-child {
+    border-bottom: none;
+}
+
+.player-info-min {
+    display: flex;
+    flex-direction: column;
+    font-size: 15px;
+}
+
+.player-name-min {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.player-time-min {
+    font-size: 12px;
+    color: #606770;
+}
+
+.progress-bar-min {
+    width: 100px;
+    height: 8px;
+    background-color: var(--color-gray-light);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--color-blue);
+    border-radius: 4px;
+    width: 60%; /* Tùy chỉnh theo tiến độ */
+}
+
+/* --- Chat Mini --- */
+.chat-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.chat-box {
+    height: 150px;
+    background-color: var(--color-gray-light);
+    border-radius: 8px;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 14px;
+    color: #555;
+    border: 1px solid #ddd;
+    display: flex; 
+    flex-direction: column;
+}
+
+/* Thêm khu vực nhập chat */
+.chat-input-area {
+    margin-top: 10px;
+    display: flex;
+    gap: 5px;
+}
+.chat-input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+.chat-send-btn {
+    background-color: var(--color-blue);
+    color: white;
+    border: none;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    height: 34px; /* đồng bộ chiều cao với input */
+}
+.chat-send-btn:hover {
+    background-color: #0056b3;
+}
+
+
+/* --- Responsive (Mobile/Tablet) --- */
+@media (max-width: 992px) {
+    .game-main-content {
+        flex-direction: column; /* Chuyển sang bố cục dọc */
+    }
+
+    .sudoku-section {
+        order: 2; /* Đẩy Sudoku xuống dưới */
+    }
+
+    .game-sidebar {
+        order: 1; /* Đẩy Sidebar lên trên */
+        flex-direction: row; /* Sidebar xếp ngang trên tablet */
+    }
+
+    .leaderboard-card, .chat-card {
+        flex: 1;
+    }
+
+    .sudoku-grid {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .game-screen {
+        padding: 16px;
+    }
+
+    .game-header {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    .header-left {
+        order: 1;
+    }
+    
+    .timer {
+        order: 2;
+        font-size: 20px;
+    }
+
+    .header-actions {
+        order: 3;
+        flex-grow: 1;
+        justify-content: flex-end;
+    }
+
+    .game-sidebar {
+        flex-direction: column; /* Sidebar quay lại bố cục dọc trên mobile */
+        gap: 16px;
+    }
+
+    .number-buttons-container {
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: space-around;
+    }
+
+    .number-button {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+    }
+
+    .tool-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
