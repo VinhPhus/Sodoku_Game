@@ -1,0 +1,100 @@
+/* =========================================== */
+/* --- SurrenderDialog.css: Modal Đầu Hàng --- */
+/* =========================================== */
+
+:root {
+    --text-primary: #1c1e21;
+    --bg-card: #ffffff;
+    --color-blue: #007aff;
+    --color-red: #dc2626;
+    --color-gray-dark: rgba(0, 0, 0, 0.6); /* Nền mờ */
+}
+
+/* --- Lớp phủ toàn màn hình (Modal Backdrop) --- */
+.surrender-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-gray-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Đảm bảo modal nằm trên Maingame */
+}
+
+/* --- Hộp thoại chính --- */
+.surrender-dialog {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    transform: scale(0.9);
+    opacity: 0;
+    animation: fadeInScale 0.2s forwards;
+}
+
+@keyframes fadeInScale {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.surrender-dialog h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-red);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.surrender-dialog p {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+/* --- Nút Hành động --- */
+.surrender-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.action-button {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex: 1;
+}
+
+/* Nút Chấp nhận (Đầu hàng) */
+.button-accept {
+    background-color: var(--color-red);
+    color: white;
+    border: none;
+}
+
+.button-accept:hover {
+    background-color: #a72323;
+}
+
+/* Nút Hủy */
+.button-cancel {
+    background-color: #e4e6eb;
+    color: var(--text-primary);
+    border: 1px solid #ccc;
+}
+
+.button-cancel:hover {
+    background-color: #ccc;
+}

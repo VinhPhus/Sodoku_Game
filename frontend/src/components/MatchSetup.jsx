@@ -48,21 +48,26 @@ const ExitIcon = () => (
 );
 // --- Hết phần icon SVG ---
 
-const MatchSetup = ({ user, opponent, onBack }) => {
+// Single, merged component with onStartGame prop
+const MatchSetup = ({ user, opponent, onBack, onStartGame }) => {
   const [countdown, setCountdown] = useState(3);
   const [statusText, setStatusText] = useState("Đang tạo phòng đấu...");
 
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
+        setCountdown((c) => c - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else {
-      setStatusText("Bắt đầu!");
-      // Bạn có thể gọi hàm bắt đầu game tại đây
     }
-  }, [countdown]);
+
+    // countdown === 0: update status and notify parent once
+    setStatusText("Bắt đầu!");
+    if (typeof onStartGame === "function") {
+      onStartGame();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdown, onStartGame]);
 
   return (
     <div className="match-setup-screen">
