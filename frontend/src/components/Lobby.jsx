@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { LogOut, Swords, BarChart3 } from "lucide-react";
 import "../style/Lobby.css";
 import userIcon from "../assets/img/user-icon.png";
+import MinhTam from "../assets/img/MinhTam.jpg";
 import ChallengeDialog from "./ChallengeDialog";
 
 // --- Component SVG Avatar (Không thay đổi) ---
@@ -24,9 +25,9 @@ const DefaultAvatar = () => (
 // --- Dữ liệu giả lập (Không thay đổi) ---
 const mockPlayers = [
   { id: 1, name: "sói hoang", status: "online", avatar: null },
-  { id: 2, name: "mèo méo meo", status: "online", avatar: null },
+  { id: 2, name: "sickmyduck", status: "online", avatar: null },
   { id: 3, name: "Vinh Phú", status: "busy", avatar: userIcon },
-  { id: 4, name: "Minh Tâm", status: "online", avatar: null },
+  { id: 4, name: "Minh Tâm", status: "online", avatar: MinhTam },
   { id: 5, name: "No Name", status: "online", avatar: null },
 ];
 
