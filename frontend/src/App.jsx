@@ -62,11 +62,12 @@ const App = () => {
      * Hàm xử lý khi người dùng nhấn HOÀN THÀNH (Dự kiến THẮNG)
      * @param {Array} finalBoard - Trạng thái cuối cùng của bàn cờ (nếu cần chấm điểm)
      */
-    const handleFinishGame = (finalBoard) => {
+    const handleFinishGame = (finalBoard, errors) => {
         // Giả lập dữ liệu thắng cuộc
         const result = {
             isUserWinner: true, 
-            user: { name: user.name, timeCompleted: '02:10', errors: 0, isWinner: true },
+            user: { name: user.name, timeCompleted: '02:10', errors: errors, isWinner: true },
+            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
             opponent: { name: opponent.name, timeCompleted: '03:00', errors: 1, isWinner: false },
         };
         setLastMatchResult(result);
@@ -76,11 +77,12 @@ const App = () => {
     /**
      * Hàm xử lý khi người dùng nhấn ĐẦU HÀNG (Dự kiến THUA)
      */
-    const handleSurrender = () => {
+    const handleSurrender = (errors) => {
         // Giả lập dữ liệu thua cuộc
         const result = {
             isUserWinner: false, 
-            user: { name: user.name, timeCompleted: 'Đầu hàng', errors: 3, isWinner: false },
+            user: { name: user.name, timeCompleted: 'Đầu hàng', errors: errors, isWinner: false },
+            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
             opponent: { name: opponent.name, timeCompleted: '01:50', errors: 0, isWinner: true },
         };
         setLastMatchResult(result);

@@ -66,6 +66,8 @@ const SudokuCell = ({ value, isDefault, isSelected, isError, onCellClick }) => {
 const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onSurrender = () => {}, onFinish = () => {} }) => {
     const [board, setBoard] = useState(initialBoard);
     const [selectedCell, setSelectedCell] = useState(null); // {row, col}
+    const [errorCells, setErrorCells] = useState(new Set()); // Dùng Set để quản lý ô lỗi hiệu quả
+    const [errorCount, setErrorCount] = useState(0); //
     const [timeLeft, setTimeLeft] = useState(140); // seconds (02:20)
     const [tool, setTool] = useState('normal'); // 'normal', 'pencil', 'eraser'
     const [showSurrenderDialog, setShowSurrenderDialog] = useState(false);
@@ -97,7 +99,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
         setSelectedCell({ row, col });
     };
 
-    const handleNumberInput = (number) => {
+    const handleNumberInput = async (number) => {
         if (!selectedCell) return;
         const { row, col } = selectedCell;
         if (defaultCells[row][col]) return; 
@@ -122,17 +124,64 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
             
         } else if (tool === 'eraser') {
             newBoard[row][col] = 0;
+            const newErrors = new Set(errorCells);
+            newErrors.delete(`${row}-${col}`);
+            setErrorCells(newErrors);
         } else { // tool === 'normal' (Điền số chính thức)
             newBoard[row][col] = number;
-        }
+            try {
+                const requestBody = {
+                    board: newBoard, // Gửi bảng MỚI sau khi điền số
+                    row: row,
+                    col: col,
+                    value: number
+                };
+
+                // Giả định API chạy trên cổng 8000
+                const response = await fetch('http://localhost:8000/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                if (!response.ok) {
+                    throw new Error('API call failed');
+                }
+
+                const result = await response.json(); // { isValid: true/false }
+
+                // Cập nhật state lỗi
+                const newErrors = new Set(errorCells);
+                const cellKey = `${row}-${col}`;
+
+                if (result.isValid) {
+                    newErrors.delete(cellKey); // Xóa lỗi nếu nước đi hợp lệ
+                } else {
+                    newErrors.add(cellKey); // Thêm lỗi nếu nước đi KHÔNG hợp lệ
+                    if (!errorCells.has(cellKey)) {
+                        setErrorCount(prevCount => prevCount + 1);
+                    }
+                }
+                setErrorCells(newErrors);
+
+            } catch (error) {
+                console.error("Lỗi khi kiểm tra nước đi:", error);
+                // Có thể thêm xử lý báo lỗi API cho người dùng
+            }
+            // --- KẾT THÚC GỌI API ---
+            }
 
         setBoard(newBoard);
     };
-
     const handleDelete = () => {
         if (!selectedCell) return;
         const { row, col } = selectedCell;
         if (defaultCells[row][col]) return;
+        const newErrors = new Set(errorCells);
+        newErrors.delete(`${row}-${col}`);
+        setErrorCells(newErrors);
         setBoard(prev => {
             const copy = prev.map(r => r.slice());
             copy[row][col] = 0;
@@ -179,7 +228,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
 
     const handleConfirmSurrender = () => {
         setShowSurrenderDialog(false);
-        onSurrender();
+        onSurrender(errorCount);
     };
 
     const handleCancelSurrender = () => {
@@ -188,7 +237,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
 
     const handleFinish = () => {
         if (window.confirm("Bạn có chắc chắn muốn Hoàn Thành? Bài sẽ được gửi để chấm điểm.")) {
-            onFinish(board); 
+            onFinish(board, errorCount); 
         }
     };
 
@@ -198,13 +247,15 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
         for (let r = 0; r < 9; r++) {
             const rowCells = [];
             for (let c = 0; c < 9; c++) {
+                const cellKey = `${r}-${c}`;
+                const isError = errorCells.has(cellKey);
                 rowCells.push(
                     <SudokuCell
                         key={`${r}-${c}`}
                         value={board[r][c]}
                         isDefault={defaultCells[r][c]}
                         isSelected={selectedCell?.row === r && selectedCell?.col === c}
-                        isError={false} // Cần logic kiểm tra lỗi thực tế
+                        isError={isError} // Cần logic kiểm tra lỗi thực tế
                         onCellClick={() => handleCellClick(r, c)}
                     />
                 );
@@ -291,6 +342,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                         <div className="player-score-item">
                             <div className="player-info-min">
                                 <span className="player-name-min">Bạn</span>
+                                <span className="player-name-min">Bạn (Lỗi: {errorCount})</span>
                                 <span className="player-time-min">Tổng thời gian: 01:20</span>
                             </div>
                             <div className="progress-bar-min">
