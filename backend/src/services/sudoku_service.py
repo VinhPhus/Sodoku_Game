@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-from models.sudoku_board import SudokuBoard
-from models.user import User
+from src.models.sudoku_board import SudokuBoard
+from src.models.user_model import User
 from fastapi import HTTPException
 import random
+from ..services.sudoku_service import SudokuService
 
 class SudokuService:
     def __init__(self, db: Session):
@@ -62,3 +63,4 @@ class SudokuService:
             board[row][col] = num
             return True
         raise HTTPException(status_code=400, detail="Invalid move")
+    SudokuService()

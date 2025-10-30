@@ -1,56 +1,86 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
-from typing import List
+# src/sockets/socket_server.py
 
-app = FastAPI()
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import json
 
-# Store connected WebSocket clients
-clients: List[WebSocket] = []
+# Import tương đối: '..' đi lên 'src', sau đó vào 'services'
 
-@app.websocket("/ws")
+router = APIRouter()
+
+class ConnectionManager:
+    """Quản lý các kết nối WebSocket."""
+def some_function():
+    from ..services.sudoku_service import SudokuService  # import ở đây
+    service = SudokuService()
+
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        print(f"Client mới đã kết nối. Tổng số: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+        print(f"Client đã ngắt kết nối. Còn lại: {len(self.active_connections)}")
+
+    async def send_personal_message(self, message: dict, websocket: WebSocket):
+        """Gửi tin nhắn JSON cho một client cụ thể."""
+        await websocket.send_json(message)
+
+# Tạo một instance manager
+manager = ConnectionManager()
+
+
+@router.websocket("/game")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    clients.append(websocket)
+    """
+    Endpoint WebSocket chính cho game Sudoku.
+    """
+    await manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            await broadcast(data)
+            # Chờ nhận tin nhắn từ client
+            data_str = await websocket.receive_text()
+            data = json.loads(data_str)
+            
+            action = data.get("action")
+            payload = data.get("payload", {})
+
+            if action == "new_game":
+                # Client yêu cầu ván mới
+                board = sudoku_service.generate_puzzle()
+                # Gửi ván đố về cho client (dùng .dict() để chuyển Pydantic model thành JSON)
+                await manager.send_personal_message(
+                    {"type": "game_created", "data": board.dict()},
+                    websocket
+                )
+            
+            elif action == "make_move":
+                # Client thực hiện một nước đi
+                row = payload.get("row")
+                col = payload.get("col")
+                value = payload.get("value")
+                
+                is_valid = sudoku_service.check_move(row, col, value)
+                
+                await manager.send_personal_message(
+                    {"type": "move_result", "data": {"valid": is_valid, "row": row, "col": col, "value": value}},
+                    websocket
+                )
+                
+            else:
+                # Hành động không xác định
+                await manager.send_personal_message(
+                    {"type": "error", "data": {"message": f"Hành động '{action}' không được hỗ trợ."}},
+                    websocket
+                )
+
     except WebSocketDisconnect:
-        clients.remove(websocket)
+        manager.disconnect(websocket)
+    except Exception as e:
+        print(f"Lỗi WebSocket: {e}")
+        manager.disconnect(websocket)
 
-async def broadcast(message: str):
-    for client in clients:
-        await client.send_text(message)
-
-@app.get("/")
-async def get():
-    return HTMLResponse("""
-    <html>
-        <head>
-            <title>WebSocket Test</title>
-        </head>
-        <body>
-            <h1>WebSocket Test</h1>
-            <form action="" onsubmit="sendMessage(event)">
-                <input type="text" id="messageText" autocomplete="off"/>
-                <button>Send</button>
-            </form>
-            <ul id='messages'></ul>
-            <script>
-                var ws = new WebSocket("ws://localhost:8000/ws");
-                ws.onmessage = function(event) {
-                    var messages = document.getElementById('messages');
-                    var message = document.createElement('li');
-                    message.appendChild(document.createTextNode(event.data));
-                    messages.appendChild(message);
-                };
-                function sendMessage(event) {
-                    var input = document.getElementById("messageText");
-                    ws.send(input.value);
-                    input.value = '';
-                    event.preventDefault();
-                }
-            </script>
-        </body>
-    </html>
-    """)
+print("Đã tải: src/sockets/socket_server.py")
