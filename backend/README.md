@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+## Chạy backend
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+=======
 # Sudoku Backend Application
 
 This is a FastAPI-based backend application for a Sudoku game. It provides functionalities for user authentication, game management, and real-time interactions through WebSockets.
@@ -68,3 +75,4 @@ sudoku-backend/
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or features you'd like to add.
+>>>>>>> edf68831ed3dfad315959674b2c89d1151d3f4d9

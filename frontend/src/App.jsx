@@ -15,12 +15,12 @@ const mockInitialOpponent = { name: 'AI Opponent', id: 'a1' };
 const App = () => {
     // State quản lý màn hình hiện tại: 
     // 'login' | 'lobby' | 'matchSetup' | 'game' | 'matchResult' | 'history'
-    const [screen, setScreen] = useState('login'); 
-    
+    const [screen, setScreen] = useState('login');
+
     // State lưu trữ thông tin người chơi
     const [user, setUser] = useState(mockInitialUser);
     const [opponent, setOpponent] = useState(mockInitialOpponent);
-    
+
     // State lưu trữ kết quả trận đấu để truyền vào MatchResult
     const [lastMatchResult, setLastMatchResult] = useState(null);
 
@@ -62,11 +62,12 @@ const App = () => {
      * Hàm xử lý khi người dùng nhấn HOÀN THÀNH (Dự kiến THẮNG)
      * @param {Array} finalBoard - Trạng thái cuối cùng của bàn cờ (nếu cần chấm điểm)
      */
-    const handleFinishGame = (finalBoard) => {
+    const handleFinishGame = (finalBoard, errors) => {
         // Giả lập dữ liệu thắng cuộc
         const result = {
-            isUserWinner: true, 
-            user: { name: user.name, timeCompleted: '02:10', errors: 0, isWinner: true },
+            isUserWinner: true,
+            user: { name: user.name, timeCompleted: '02:10', errors: errors, isWinner: true },
+            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
             opponent: { name: opponent.name, timeCompleted: '03:00', errors: 1, isWinner: false },
         };
         setLastMatchResult(result);
@@ -76,17 +77,18 @@ const App = () => {
     /**
      * Hàm xử lý khi người dùng nhấn ĐẦU HÀNG (Dự kiến THUA)
      */
-    const handleSurrender = () => {
+    const handleSurrender = (errors) => {
         // Giả lập dữ liệu thua cuộc
         const result = {
-            isUserWinner: false, 
-            user: { name: user.name, timeCompleted: 'Đầu hàng', errors: 3, isWinner: false },
+            isUserWinner: false,
+            user: { name: user.name, timeCompleted: 'Đầu hàng', errors: errors, isWinner: false },
+            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
             opponent: { name: opponent.name, timeCompleted: '01:50', errors: 0, isWinner: true },
         };
         setLastMatchResult(result);
         setScreen('matchResult');
     };
-    
+
     // ===============================================
     // --- 5. Logic Hiển thị (RENDER) ---
     // ===============================================
@@ -95,11 +97,11 @@ const App = () => {
         switch (screen) {
             case 'login':
                 return <AuthWrapper onAuthSuccess={handleAuthSuccess} />; // Dùng AuthWrapper mới
-            
+
             case 'lobby':
                 return (
-                    <Lobby 
-                        user={user} 
+                    <Lobby
+                        user={user}
                         onAcceptChallenge={handleAcceptChallenge}
                         onViewHistory={() => setScreen('history')} // Thêm luồng đến History
                         onLogout={() => setScreen('login')}
@@ -108,16 +110,16 @@ const App = () => {
 
             case 'matchSetup':
                 return (
-                    <MatchSetup 
-                        user={user} 
-                        opponent={opponent} 
-                        onStartGame={handleStartGame} 
+                    <MatchSetup
+                        user={user}
+                        opponent={opponent}
+                        onStartGame={handleStartGame}
                     />
                 );
 
             case 'game':
                 return (
-                    <Maingame 
+                    <Maingame
                         user={user}
                         opponent={opponent}
                         onFinish={handleFinishGame} // Kết thúc (THẮNG)
@@ -127,7 +129,7 @@ const App = () => {
 
             case 'matchResult':
                 return (
-                    <MatchResult 
+                    <MatchResult
                         user={user}
                         opponent={opponent}
                         resultData={lastMatchResult} // Dữ liệu kết quả từ game
@@ -136,12 +138,12 @@ const App = () => {
                         onViewHistory={() => setScreen('history')}
                     />
                 );
-            
+
             case 'history':
                 return (
-                    <History 
+                    <History
                         onMenuClick={() => setScreen('lobby')} // Quay lại Lobby
-                        // onViewDetails={handleViewMatchDetails} // Thêm luồng này sau
+                    // onViewDetails={handleViewMatchDetails} // Thêm luồng này sau
                     />
                 );
 
