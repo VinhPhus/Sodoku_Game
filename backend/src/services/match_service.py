@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from models.match import Match
-from models.user import User
+from backend.src.models.user_model import User
 
 class MatchService:
     def __init__(self, db: Session):
