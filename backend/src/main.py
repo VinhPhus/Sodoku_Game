@@ -29,6 +29,6 @@ app.include_router(websocket_router, prefix="/ws", tags=["WebSocket"])
 
 @app.get("/")
 async def read_root():
-    return {"message": "Chào mừng đến với Sudoku API. Kết nối WebSocket tại /ws/game"}
+    return {"message": "Hân hạnh đến với Sudoku API. Kết nối WebSocket tại /ws/game"}
 
 print("Đã tải: src/main.py - Ứng dụng FastAPI 'app' đã sẵn sàng.")
