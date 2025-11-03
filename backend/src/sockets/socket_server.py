@@ -2,85 +2,96 @@
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import json
-
-# Import tương đối: '..' đi lên 'src', sau đó vào 'services'
+from typing import List
 
 router = APIRouter()
 
+
 class ConnectionManager:
-    """Quản lý các kết nối WebSocket."""
-def some_function():
-    from ..services.sudoku_service import SudokuService  # import ở đây
-    service = SudokuService()
+    """Simple Connection manager for demo WebSocket usage.
+
+    Supports tracking active connections, sending personal messages and broadcasting.
+    """
 
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: List[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        print(f"Client mới đã kết nối. Tổng số: {len(self.active_connections)}")
+        print(f"Client connected. Total: {len(self.active_connections)}")
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-        print(f"Client đã ngắt kết nối. Còn lại: {len(self.active_connections)}")
+        try:
+            self.active_connections.remove(websocket)
+        except ValueError:
+            pass
+        print(f"Client disconnected. Total: {len(self.active_connections)}")
 
     async def send_personal_message(self, message: dict, websocket: WebSocket):
-        """Gửi tin nhắn JSON cho một client cụ thể."""
         await websocket.send_json(message)
 
-# Tạo một instance manager
+    async def broadcast(self, message: dict):
+        # Iterate over a copy to avoid mutation during send
+        for conn in list(self.active_connections):
+            try:
+                await conn.send_json(message)
+            except Exception as e:
+                print("Failed to send to a client, removing it:", e)
+                try:
+                    self.active_connections.remove(conn)
+                except ValueError:
+                    pass
+
+
 manager = ConnectionManager()
 
 
-@router.websocket("/game")
+def _make_demo_board():
+    """Return a very small demo board shape used for demo purposes."""
+    return {"board": [[0 for _ in range(9)] for _ in range(9)]}
+
+
+@router.websocket("/ws/game")
 async def websocket_endpoint(websocket: WebSocket):
-    """
-    Endpoint WebSocket chính cho game Sudoku.
+    """Demo WebSocket endpoint.
+
+    Accepts simple JSON messages:
+      {"action":"echo","payload":...} -> sends back to sender
+      {"action":"broadcast","payload":...} -> sends to all connected clients
+      {"action":"new_game"} -> returns a demo board
     """
     await manager.connect(websocket)
     try:
         while True:
-            # Chờ nhận tin nhắn từ client
             data_str = await websocket.receive_text()
-            data = json.loads(data_str)
-            
-            action = data.get("action")
-            payload = data.get("payload", {})
+            try:
+                data = json.loads(data_str)
+            except Exception:
+                await manager.send_personal_message({"type": "error", "data": "invalid json"}, websocket)
+                continue
 
-            if action == "new_game":
-                # Client yêu cầu ván mới
-                board = sudoku_service.generate_puzzle()
-                # Gửi ván đố về cho client (dùng .dict() để chuyển Pydantic model thành JSON)
-                await manager.send_personal_message(
-                    {"type": "game_created", "data": board.dict()},
-                    websocket
-                )
-            
-            elif action == "make_move":
-                # Client thực hiện một nước đi
-                row = payload.get("row")
-                col = payload.get("col")
-                value = payload.get("value")
-                
-                is_valid = sudoku_service.check_move(row, col, value)
-                
-                await manager.send_personal_message(
-                    {"type": "move_result", "data": {"valid": is_valid, "row": row, "col": col, "value": value}},
-                    websocket
-                )
-                
+            action = data.get("action")
+            payload = data.get("payload", None)
+
+            if action == "echo":
+                await manager.send_personal_message({"type": "echo", "data": payload}, websocket)
+
+            elif action == "broadcast":
+                await manager.broadcast({"type": "broadcast", "data": payload})
+
+            elif action == "new_game":
+                board = _make_demo_board()
+                await manager.send_personal_message({"type": "game_created", "data": board}, websocket)
+
             else:
-                # Hành động không xác định
-                await manager.send_personal_message(
-                    {"type": "error", "data": {"message": f"Hành động '{action}' không được hỗ trợ."}},
-                    websocket
-                )
+                await manager.send_personal_message({"type": "error", "data": f"unknown action '{action}'"}, websocket)
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
-        print(f"Lỗi WebSocket: {e}")
+        print("WebSocket error:", e)
         manager.disconnect(websocket)
 
-print("Đã tải: src/sockets/socket_server.py")
+
+print("Loaded: src/sockets/socket_server.py (demo)")
