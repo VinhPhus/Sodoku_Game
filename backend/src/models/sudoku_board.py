@@ -1,14 +1,21 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
-from src.config.db import Base
+# src/models/sudoku_board.py
 
-class SudokuBoard(Base):
-    __tablename__ = 'sudoku_boards'
+from pydantic import BaseModel
+from typing import List
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    board = Column(String, nullable=False)
-    created_at = Column(Integer, nullable=False)
-    updated_at = Column(Integer, nullable=False)
+class SudokuBoard(BaseModel):
+    """
+    Đại diện cho một ván game, bao gồm ván đố và lời giải.
+    """
+    puzzle: List[List[int]]
+    solution: List[List[int]]
 
-    user = relationship("User", back_populates="sudoku_boards")
+class SudokuMove(BaseModel):
+    """
+    Đại diện cho một nước đi của người dùng.
+    """
+    row: int
+    col: int
+    value: int
+
+print("Đã tải: src/models/sudoku_board.py")

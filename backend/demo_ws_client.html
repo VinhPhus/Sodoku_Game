@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>WebSocket Demo Client</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px }
+    textarea { width: 100%; height: 120px }
+    #log { white-space: pre-wrap; background: #f7f7f7; padding: 8px; border: 1px solid #ddd; height: 200px; overflow: auto }
+  </style>
+</head>
+<body>
+  <h3>WebSocket Demo Client</h3>
+  <p>Connects to <code>ws://127.0.0.1:8000/ws/game</code></p>
+
+  <div>
+    <button id="connect">Connect</button>
+    <button id="disconnect" disabled>Disconnect</button>
+  </div>
+
+  <h4>Send action</h4>
+  <select id="action">
+    <option value="echo">echo</option>
+    <option value="broadcast">broadcast</option>
+    <option value="new_game">new_game</option>
+  </select>
+  <div>
+    <textarea id="payload" placeholder='JSON payload, e.g. {"msg":"hello"}'></textarea>
+  </div>
+  <div>
+    <button id="send">Send</button>
+  </div>
+
+  <h4>Log</h4>
+  <div id="log"></div>
+
+  <script>
+    let ws = null;
+    const logEl = document.getElementById('log');
+
+    function log(v){
+      logEl.textContent += (new Date()).toLocaleTimeString() + ' - ' + v + '\n';
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    document.getElementById('connect').onclick = () => {
+      if (ws) return;
+
+      const url = 'ws://127.0.0.1:8000/ws/game';
+      ws = new WebSocket(url);
+
+      ws.onopen = () => { 
+        log('Connected to ' + url);
+        document.getElementById('disconnect').disabled = false;
+      };
+
+      ws.onclose = () => { 
+        log('Disconnected');
+        ws = null;
+        document.getElementById('disconnect').disabled = true;
+      };
+
+      ws.onerror = (e) => log('⚠️ WebSocket error');
+      ws.onmessage = (ev) => log('Received: ' + ev.data);
+    };
+
+    document.getElementById('disconnect').onclick = () => {
+      if (ws) ws.close();
+    };
+
+    document.getElementById('send').onclick = () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) { 
+        alert('Not connected'); 
+        return; 
+      }
+
+      const action = document.getElementById('action').value;
+      let payloadText = document.getElementById('payload').value.trim();
+      let payload = null;
+
+      if (payloadText) {
+        try { 
+          payload = JSON.parse(payloadText); 
+        } catch (e) { 
+          alert('Invalid JSON'); 
+          return; 
+        }
+      }
+
+      const msg = { action: action, payload: payload };
+      ws.send(JSON.stringify(msg));
+      log('Sent: ' + JSON.stringify(msg));
+    };
+  </script>
+</body>
+</html>

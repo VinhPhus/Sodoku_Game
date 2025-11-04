@@ -38,7 +38,11 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
+<<<<<<< HEAD
 VIRTUAL_ENV="E:\sudoku\Sodoku_Game\backend\venv"
+=======
+VIRTUAL_ENV="C:\Users\Admin\Documents\Zalo Received Files\Sodoku_Game\backend\venv"
+>>>>>>> dd5bd978261a6509641e260844fd7942272a7443
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

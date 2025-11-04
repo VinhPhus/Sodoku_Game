@@ -8,7 +8,11 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
+<<<<<<< HEAD
 set VIRTUAL_ENV=E:\sudoku\Sodoku_Game\backend\venv
+=======
+set VIRTUAL_ENV=C:\Users\Admin\Documents\Zalo Received Files\Sodoku_Game\backend\venv
+>>>>>>> dd5bd978261a6509641e260844fd7942272a7443
 
 if not defined PROMPT set PROMPT=$P$G
 
