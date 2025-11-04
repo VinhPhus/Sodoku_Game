@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from datetime import datetime
 
 # -------- User Schemas --------
+
+
 class UserCreate(BaseModel):
     username: str
     password: str
