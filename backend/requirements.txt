@@ -1,7 +1,5 @@
-<<<<<<< HEAD
 fastapi
 uvicorn[standard]
-=======
 FastAPI
 uvicorn
 sqlalchemy
@@ -11,4 +9,4 @@ passlib
 websockets
 pytest
 httpx
->>>>>>> edf68831ed3dfad315959674b2c89d1151d3f4d9
+
