@@ -1,109 +1,109 @@
 import React, { useState } from 'react';
-import './style/index.css';
-
-// Import các component
-import AuthWrapper from './components/AuthWrapper';
+import './style/index.css'; // File CSS toàn cục
+// Import tất cả các components cần thiết
+import AuthWrapper from './components/AuthWrapper'; // Mới: Quản lý Login/Register
 import Lobby from './components/Lobby';
 import MatchSetup from './components/MatchSetup';
 import Maingame from './components/Maingame';
-import MatchResult from './components/MatchResult';
-import History from './components/History';
+import MatchResult from './components/MatchResult'; // Mới
+import History from './components/History'; // Mới
 
-// Dữ liệu mặc định
+// Dữ liệu giả lập về trận đấu
 const mockInitialUser = { name: 'GUEST', id: 'u1' };
 const mockInitialOpponent = { name: 'AI Opponent', id: 'a1' };
 
 const App = () => {
-    // Quản lý màn hình
+    // State quản lý màn hình hiện tại: 
+    // 'login' | 'lobby' | 'matchSetup' | 'game' | 'matchResult' | 'history'
     const [screen, setScreen] = useState('login');
 
-    // Quản lý người chơi và đối thủ
+    // State lưu trữ thông tin người chơi
     const [user, setUser] = useState(mockInitialUser);
     const [opponent, setOpponent] = useState(mockInitialOpponent);
 
-    // Quản lý kết quả trận đấu
+    // State lưu trữ kết quả trận đấu để truyền vào MatchResult
     const [lastMatchResult, setLastMatchResult] = useState(null);
 
-    // ===========================================================
-    // 1️⃣ XỬ LÝ ĐĂNG NHẬP / ĐĂNG KÝ
-    // ===========================================================
+    // ===============================================
+    // --- 1. Xử lý Luồng Xác thực (LOGIN/REGISTER) ---
+    // ===============================================
+
+    // Hàm được gọi khi Đăng nhập/Đăng ký thành công
     const handleAuthSuccess = (username) => {
+        // Cập nhật tên người dùng và chuyển sang Lobby
         setUser({ ...user, name: username });
         setScreen('lobby');
     };
 
-    // ===========================================================
-    // 2️⃣ XỬ LÝ Ở LOBBY
-    // ===========================================================
+    // ===============================================
+    // --- 2. Xử lý Luồng Thách đấu (LOBBY) ---
+    // ===============================================
+
+    // Hàm được gọi khi chấp nhận lời mời (từ Lobby)
     const handleAcceptChallenge = (challenger) => {
         setOpponent(challenger);
         setScreen('matchSetup');
     };
 
-    // ===========================================================
-    // 3️⃣ BẮT ĐẦU GAME (Match Setup)
-    // ===========================================================
+    // ===============================================
+    // --- 3. Xử lý Luồng Bắt đầu Game (MATCH SETUP) ---
+    // ===============================================
+
+    // Hàm được gọi khi MatchSetup đếm ngược xong
     const handleStartGame = () => {
         setScreen('game');
     };
 
-    // ===========================================================
-    // 4️⃣ KHI KẾT THÚC TRẬN (Maingame)
-    // ===========================================================
+    // ===============================================
+    // --- 4. Xử lý Luồng Kết thúc Game (MAINGAME) ---
+    // ===============================================
+
+    /**
+     * Hàm xử lý khi người dùng nhấn HOÀN THÀNH (Dự kiến THẮNG)
+     * @param {Array} finalBoard - Trạng thái cuối cùng của bàn cờ (nếu cần chấm điểm)
+     */
     const handleFinishGame = (finalBoard, errors) => {
+        // Giả lập dữ liệu thắng cuộc
         const result = {
             isUserWinner: true,
-            user: {
-                name: user.name,
-                timeCompleted: '02:10',
-                errors,
-                isWinner: true,
-            },
-            opponent: {
-                name: opponent.name,
-                timeCompleted: '03:00',
-                errors: 1,
-                isWinner: false,
-            },
+            user: { name: user.name, timeCompleted: '02:10', errors: errors, isWinner: true },
+            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
+            opponent: { name: opponent.name, timeCompleted: '03:00', errors: 1, isWinner: false },
         };
         setLastMatchResult(result);
         setScreen('matchResult');
     };
 
+    /**
+     * Hàm xử lý khi người dùng nhấn ĐẦU HÀNG (Dự kiến THUA)
+     */
     const handleSurrender = (errors) => {
+        // Giả lập dữ liệu thua cuộc
         const result = {
             isUserWinner: false,
-            user: {
-                name: user.name,
-                timeCompleted: 'Đầu hàng',
-                errors,
-                isWinner: false,
-            },
-            opponent: {
-                name: opponent.name,
-                timeCompleted: '01:50',
-                errors: 0,
-                isWinner: true,
-            },
+            user: { name: user.name, timeCompleted: 'Đầu hàng', errors: errors, isWinner: false },
+            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
+            opponent: { name: opponent.name, timeCompleted: '01:50', errors: 0, isWinner: true },
         };
         setLastMatchResult(result);
         setScreen('matchResult');
     };
 
-    // ===========================================================
-    // 5️⃣ HIỂN THỊ MÀN HÌNH
-    // ===========================================================
+    // ===============================================
+    // --- 5. Logic Hiển thị (RENDER) ---
+    // ===============================================
+
     const renderScreen = () => {
         switch (screen) {
             case 'login':
-                return <AuthWrapper onAuthSuccess={handleAuthSuccess} />;
+                return <AuthWrapper onAuthSuccess={handleAuthSuccess} />; // Dùng AuthWrapper mới
 
             case 'lobby':
                 return (
                     <Lobby
                         user={user}
                         onAcceptChallenge={handleAcceptChallenge}
-                        onViewHistory={() => setScreen('history')}
+                        onViewHistory={() => setScreen('history')} // Thêm luồng đến History
                         onLogout={() => setScreen('login')}
                     />
                 );
@@ -122,8 +122,8 @@ const App = () => {
                     <Maingame
                         user={user}
                         opponent={opponent}
-                        onFinish={handleFinishGame}
-                        onSurrender={handleSurrender}
+                        onFinish={handleFinishGame} // Kết thúc (THẮNG)
+                        onSurrender={handleSurrender} // Đầu hàng (THUA)
                     />
                 );
 
@@ -132,7 +132,7 @@ const App = () => {
                     <MatchResult
                         user={user}
                         opponent={opponent}
-                        resultData={lastMatchResult}
+                        resultData={lastMatchResult} // Dữ liệu kết quả từ game
                         onReplay={() => setScreen('matchSetup')}
                         onGoToLobby={() => setScreen('lobby')}
                         onViewHistory={() => setScreen('history')}
@@ -142,8 +142,8 @@ const App = () => {
             case 'history':
                 return (
                     <History
-                        onMenuClick={() => setScreen('lobby')}
-                    // onViewDetails={handleViewMatchDetails} // có thể thêm sau
+                        onMenuClick={() => setScreen('lobby')} // Quay lại Lobby
+                    // onViewDetails={handleViewMatchDetails} // Thêm luồng này sau
                     />
                 );
 
@@ -152,10 +152,11 @@ const App = () => {
         }
     };
 
-    // ===========================================================
-    // 6️⃣ GIAO DIỆN CHÍNH
-    // ===========================================================
-    return <div className="App">{renderScreen()}</div>;
+    return (
+        <div className="App">
+            {renderScreen()}
+        </div>
+    );
 };
 
 export default App;

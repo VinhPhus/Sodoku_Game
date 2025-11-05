@@ -32,7 +32,12 @@ const mockPlayers = [
 ];
 
 // --- Component chính của Màn hình Sảnh ---
-const Lobby = ({ username = "VinhPlus", onLogout, onAcceptChallenge, onViewHistory }) => {
+const Lobby = ({
+  username = "VinhPlus",
+  onLogout,
+  onAcceptChallenge,
+  onViewHistory,
+}) => {
   const [players] = useState(mockPlayers);
 
   // CẢI TIẾN 1: Dùng một state duy nhất để quản lý lời mời thách đấu
@@ -133,7 +138,9 @@ const Lobby = ({ username = "VinhPlus", onLogout, onAcceptChallenge, onViewHisto
                 <h3>Lịch sử trận đấu</h3>
                 <p>Xem lại các trận đấu đã qua của bạn.</p>
               </div>
-              <button className="view-history-button" onClick={onViewHistory}>Xem</button>
+              <button className="view-history-button" onClick={onViewHistory}>
+                Xem
+              </button>
             </div>
 
             <div className="avatar-section">
