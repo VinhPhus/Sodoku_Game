@@ -1,6 +1,6 @@
 # file: test_full.py
 from sqlalchemy import (
-    create_engine, Column, Integer, String, ForeignKey,
+    create_engine, Column, Integer, String, ForeignKey, Enum,
     DateTime, Text, LargeBinary, CheckConstraint
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
@@ -102,13 +102,12 @@ class MatchHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     match_id = Column(Integer, ForeignKey("matches.id", ondelete="CASCADE"))
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    status = Column(String(20), nullable=False)
-    played_at = Column(DateTime, default=datetime.utcnow)
 
-    __table_args__ = (
-        CheckConstraint("status IN ('win', 'lose')",
-                        name="match_status_check"),
-    )
+    # Đây là fix chính: dùng Enum
+    status = Column(Enum('win', 'lose', name='match_status_enum',
+                    create_type=False), nullable=False)
+
+    played_at = Column(DateTime, default=datetime.utcnow)
 
     match = relationship("Match", back_populates="histories")
     user = relationship("User", back_populates="histories")
@@ -122,28 +121,32 @@ print("✅ All tables created successfully!")
 
 
 def test_full_flow():
-    db.query(MatchHistory).delete()
-    db.query(MatchPlayer).delete()
-    db.query(Match).delete()
-    db.query(SudokuBoard).delete()
-    db.query(User).delete()
-    db.commit()
-
-    db = SessionLocal()
+    db = SessionLocal()  # Tạo session trước
     try:
+        # --- Xóa dữ liệu hiện tại, từ bảng con lên bảng cha để tránh FK constraint ---
+        db.query(MatchHistory).delete(synchronize_session=False)
+        db.query(MatchPlayer).delete(synchronize_session=False)
+        db.query(Match).delete(synchronize_session=False)
+        db.query(SudokuBoard).delete(synchronize_session=False)
+        db.query(User).delete(synchronize_session=False)
+        db.commit()
+        print("✅ Existing data cleared!")
+
         # --- Thêm user ---
-        user1 = User(username="tiennguyen", password_hash="123456")
+        user1 = User(username="tiennguyen1231232", password_hash="123456")
         user2 = User(username="player2", password_hash="abcdef")
         db.add_all([user1, user2])
         db.commit()
         db.refresh(user1)
         db.refresh(user2)
         print(
-            f"✅ Users added: {user1.username} ({user1.id}), {user2.username} ({user2.id})")
+            f"✅ Users added: {user1.username} ({user1.id}), {user2.username} ({user2.id})"
+        )
 
         # --- Thêm sudoku board ---
         board = SudokuBoard(
-            name="Board1", initial_matrix="[[0,0,0],[0,0,0],[0,0,0]]")
+            name="Board1", initial_matrix="[[0,0,0],[0,0,0],[0,0,0]]"
+        )
         db.add(board)
         db.commit()
         db.refresh(board)
