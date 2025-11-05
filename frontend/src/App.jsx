@@ -1,129 +1,155 @@
-import React, { useState } from 'react';
-import './style/index.css'; // File CSS toàn cục
-// Import tất cả các components cần thiết
-import AuthWrapper from './components/AuthWrapper'; // Mới: Quản lý Login/Register
+import React, { useState, useEffect, useRef } from 'react';
+import './style/index.css';
+import AuthWrapper from './components/AuthWrapper';
 import Lobby from './components/Lobby';
 import MatchSetup from './components/MatchSetup';
 import Maingame from './components/Maingame';
-import MatchResult from './components/MatchResult'; // Mới
-import History from './components/History'; // Mới
+import MatchResult from './components/MatchResult';
+import History from './components/History';
 
-// Dữ liệu giả lập về trận đấu
-const mockInitialUser = { name: 'GUEST', id: 'u1' };
-const mockInitialOpponent = { name: 'AI Opponent', id: 'a1' };
+const defaultUser = { name: 'GUEST', id: 'u1' };
+const defaultOpponent = { name: 'AI Opponent', id: 'a1' };
 
 const App = () => {
-    // State quản lý màn hình hiện tại: 
-    // 'login' | 'lobby' | 'matchSetup' | 'game' | 'matchResult' | 'history'
     const [screen, setScreen] = useState('login');
-
-    // State lưu trữ thông tin người chơi
-    const [user, setUser] = useState(mockInitialUser);
-    const [opponent, setOpponent] = useState(mockInitialOpponent);
-
-    // State lưu trữ kết quả trận đấu để truyền vào MatchResult
+    const [user, setUser] = useState(defaultUser);
+    const [opponent, setOpponent] = useState(defaultOpponent);
     const [lastMatchResult, setLastMatchResult] = useState(null);
+    const [messages, setMessages] = useState([]);
 
-    // ===============================================
-    // --- 1. Xử lý Luồng Xác thực (LOGIN/REGISTER) ---
-    // ===============================================
+    // Dùng useRef để lưu socket (vì socket là persistent object)
+    const socketRef = useRef(null);
 
-    // Hàm được gọi khi Đăng nhập/Đăng ký thành công
+    // ==================================================
+    // 🔗 1. Kết nối WebSocket khi đăng nhập
+    // ==================================================
     const handleAuthSuccess = (username) => {
-        // Cập nhật tên người dùng và chuyển sang Lobby
-        setUser({ ...user, name: username });
+        const newUser = { ...user, name: username };
+        setUser(newUser);
         setScreen('lobby');
+
+        // Kết nối socket sau khi đăng nhập
+        const socket = new WebSocket(`ws://localhost:8000/ws/${username}`);
+        socketRef.current = socket;
+
+        socket.onopen = () => {
+            console.log('✅ WebSocket connected');
+            socket.send(JSON.stringify({ type: 'JOIN', user: username }));
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('📩 Server:', data);
+
+            // Xử lý các loại message khác nhau
+            switch (data.type) {
+                case 'CHALLENGE':
+                    setOpponent({ name: data.from });
+                    setScreen('matchSetup');
+                    break;
+
+                case 'START_GAME':
+                    setScreen('game');
+                    break;
+
+                case 'MATCH_RESULT':
+                    setLastMatchResult(data.payload);
+                    setScreen('matchResult');
+                    break;
+
+                default:
+                    setMessages((prev) => [...prev, data]);
+            }
+        };
+
+        socket.onclose = () => console.log('🔌 WebSocket disconnected');
+        socket.onerror = (err) => console.error('❌ Socket error:', err);
     };
 
-    // ===============================================
-    // --- 2. Xử lý Luồng Thách đấu (LOBBY) ---
-    // ===============================================
+    // ==================================================
+    // ⚙️ 2. Gửi sự kiện qua WebSocket
+    // ==================================================
+    const sendMessage = (msg) => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify(msg));
+        } else {
+            console.warn('⚠️ Socket chưa sẵn sàng');
+        }
+    };
 
-    // Hàm được gọi khi chấp nhận lời mời (từ Lobby)
     const handleAcceptChallenge = (challenger) => {
-        setOpponent(challenger);
+        setOpponent(challenger || defaultOpponent);
         setScreen('matchSetup');
+        sendMessage({ type: 'ACCEPT_CHALLENGE', user: user.name, opponent: challenger.name });
     };
 
-    // ===============================================
-    // --- 3. Xử lý Luồng Bắt đầu Game (MATCH SETUP) ---
-    // ===============================================
-
-    // Hàm được gọi khi MatchSetup đếm ngược xong
     const handleStartGame = () => {
         setScreen('game');
+        sendMessage({ type: 'START_GAME', user: user.name, opponent: opponent.name });
     };
 
-    // ===============================================
-    // --- 4. Xử lý Luồng Kết thúc Game (MAINGAME) ---
-    // ===============================================
-
-    /**
-     * Hàm xử lý khi người dùng nhấn HOÀN THÀNH (Dự kiến THẮNG)
-     * @param {Array} finalBoard - Trạng thái cuối cùng của bàn cờ (nếu cần chấm điểm)
-     */
-    const handleFinishGame = (finalBoard, errors) => {
-        // Giả lập dữ liệu thắng cuộc
+    const handleFinishGame = (finalBoard, errors = 0) => {
         const result = {
             isUserWinner: true,
-            user: { name: user.name, timeCompleted: '02:10', errors: errors, isWinner: true },
-            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
+            user: { name: user.name, timeCompleted: '02:10', errors, isWinner: true },
             opponent: { name: opponent.name, timeCompleted: '03:00', errors: 1, isWinner: false },
         };
         setLastMatchResult(result);
         setScreen('matchResult');
+        sendMessage({ type: 'MATCH_RESULT', payload: result });
     };
 
-    /**
-     * Hàm xử lý khi người dùng nhấn ĐẦU HÀNG (Dự kiến THUA)
-     */
-    const handleSurrender = (errors) => {
-        // Giả lập dữ liệu thua cuộc
+    const handleSurrender = (errors = 0) => {
         const result = {
             isUserWinner: false,
-            user: { name: user.name, timeCompleted: 'Đầu hàng', errors: errors, isWinner: false },
-            // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
+            user: { name: user.name, timeCompleted: 'Đầu hàng', errors, isWinner: false },
             opponent: { name: opponent.name, timeCompleted: '01:50', errors: 0, isWinner: true },
         };
         setLastMatchResult(result);
         setScreen('matchResult');
+        sendMessage({ type: 'MATCH_RESULT', payload: result });
     };
 
-    // ===============================================
-    // --- 5. Logic Hiển thị (RENDER) ---
-    // ===============================================
+    // ==================================================
+    // 🧹 3. Đóng socket khi rời khỏi ứng dụng
+    // ==================================================
+    useEffect(() => {
+        return () => {
+            if (socketRef.current) socketRef.current.close();
+        };
+    }, []);
 
+    // ==================================================
+    // 🧩 4. Render giao diện
+    // ==================================================
     const renderScreen = () => {
         switch (screen) {
             case 'login':
-                return <AuthWrapper onAuthSuccess={handleAuthSuccess} />; // Dùng AuthWrapper mới
+                return <AuthWrapper onAuthSuccess={handleAuthSuccess} />;
 
             case 'lobby':
                 return (
                     <Lobby
                         user={user}
                         onAcceptChallenge={handleAcceptChallenge}
-                        onViewHistory={() => setScreen('history')} // Thêm luồng đến History
-                        onLogout={() => setScreen('login')}
+                        onViewHistory={() => setScreen('history')}
+                        onLogout={() => {
+                            if (socketRef.current) socketRef.current.close();
+                            setScreen('login');
+                        }}
                     />
                 );
 
             case 'matchSetup':
-                return (
-                    <MatchSetup
-                        user={user}
-                        opponent={opponent}
-                        onStartGame={handleStartGame}
-                    />
-                );
+                return <MatchSetup user={user} opponent={opponent} onStartGame={handleStartGame} />;
 
             case 'game':
                 return (
                     <Maingame
                         user={user}
                         opponent={opponent}
-                        onFinish={handleFinishGame} // Kết thúc (THẮNG)
-                        onSurrender={handleSurrender} // Đầu hàng (THUA)
+                        onFinish={handleFinishGame}
+                        onSurrender={handleSurrender}
                     />
                 );
 
@@ -132,7 +158,7 @@ const App = () => {
                     <MatchResult
                         user={user}
                         opponent={opponent}
-                        resultData={lastMatchResult} // Dữ liệu kết quả từ game
+                        resultData={lastMatchResult}
                         onReplay={() => setScreen('matchSetup')}
                         onGoToLobby={() => setScreen('lobby')}
                         onViewHistory={() => setScreen('history')}
@@ -140,12 +166,7 @@ const App = () => {
                 );
 
             case 'history':
-                return (
-                    <History
-                        onMenuClick={() => setScreen('lobby')} // Quay lại Lobby
-                    // onViewDetails={handleViewMatchDetails} // Thêm luồng này sau
-                    />
-                );
+                return <History onMenuClick={() => setScreen('lobby')} />;
 
             default:
                 return <div>404 | Screen Not Found</div>;
@@ -155,6 +176,13 @@ const App = () => {
     return (
         <div className="App">
             {renderScreen()}
+            {/* 👇 Hiển thị log WebSocket để debug */}
+            {messages.length > 0 && (
+                <div className="debug-box">
+                    <h4>📡 WebSocket Logs</h4>
+                    <pre>{JSON.stringify(messages, null, 2)}</pre>
+                </div>
+            )}
         </div>
     );
 };

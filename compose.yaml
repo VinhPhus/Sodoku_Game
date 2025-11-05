@@ -1,0 +1,8 @@
+services:
+  sodokugame:
+    image: sodokugame
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8000:8000
