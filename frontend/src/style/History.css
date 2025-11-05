@@ -4,174 +4,170 @@
 
 /* --- Biến màu (Nhất quán với các file khác) --- */
 :root {
-    --text-primary: #1c1e21;
-    --bg-card: #ffffff;
-    --color-blue: #007aff;
-    --color-green: #28a745;
-    --color-red: #dc2626;
-    --color-gray-light: #f0f2f5;
-    --box-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --text-primary: #1c1e21;
+  --bg-card: #ffffff;
+  --color-blue: #007aff;
+  --color-green: #28a745;
+  --color-red: #dc2626;
+  --color-gray-light: #f0f2f5;
+  --box-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .history-screen {
-    background-color: var(--color-gray-light);
-    min-height: 100vh;
-    width: 100vw;
-    display: flex;
-    justify-content: center;
-    padding: 24px;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--color-gray-light);
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 }
 
 .history-container {
-    width: 100%;
-    max-width: 1000px;
-    background-color: var(--bg-card);
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    padding: 20px 30px;
+  width: 100%;
+  max-width: 1000px;
+  background-color: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px 30px;
 }
 
 /* --- Header --- */
 .history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 15px;
 }
 
 .header-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .header-logo {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--color-blue);
-    display: flex;
-    align-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-blue);
+  display: flex;
+  align-items: center;
 }
 
 .menu-icon {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 /* Nút Quay lại */
 .back-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--color-gray-light);
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--color-gray-light);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .back-button:hover {
-    background-color: #e4e6eb;
+  background-color: #e4e6eb;
 }
 
 /* --- Bảng Lịch sử --- */
 .match-list {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header Bảng (Tiêu đề cột) */
 .match-list-header {
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr 2fr 1fr; /* Cấu trúc 5 cột */
-    padding: 10px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #606770;
-    border-bottom: 2px solid var(--text-primary);
-    margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr; /* Cập nhật 4 cột */
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #606770;
+  border-bottom: 2px solid var(--text-primary);
+  margin-bottom: 10px;
 }
 
 /* Các Hàng Dữ liệu */
 .match-item {
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr 2fr 1fr;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #e9ebee;
-    font-size: 16px;
-    color: var(--text-primary);
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr; /* Cập nhật 4 cột */
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ebee;
+  font-size: 16px;
+  color: var(--text-primary);
 }
 
 .match-item:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 /* Cột Trạng thái (THẮNG/THUA) */
-.match-status-win, .match-status-loss {
-    font-weight: 700;
-    font-size: 15px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    text-align: center;
+.match-status-win,
+.match-status-loss {
+  font-weight: 700;
+  font-size: 15px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+  /* CẬP NHẬT: Căn lề trái (start) */
+  justify-self: start;
 }
 
 .match-status-win {
-    color: var(--color-green);
-    background-color: #e6ffe6; /* Light green background */
+  color: var(--color-green);
+  background-color: #e6ffe6; /* Light green background */
 }
 
 .match-status-loss {
-    color: var(--color-red);
-    background-color: #ffe6e6; /* Light red background */
+  color: var(--color-red);
+  background-color: #ffe6e6; /* Light red background */
 }
 
-/* Cột Xem Chi tiết */
-.view-details-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--color-blue);
-    cursor: pointer;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.view-details-btn:hover {
-    color: #0056b3;
-}
+/* Cột Xem Chi tiết (Đã xóa) */
+/* .view-details-btn { ... } */
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
-    .history-container {
-        padding: 15px;
-    }
-    
-    .match-list-header, .match-item {
-        font-size: 14px;
-        /* Điều chỉnh cột cho màn hình nhỏ */
-        grid-template-columns: 1fr 1.5fr 1fr 1.5fr 1fr; 
-    }
+  .history-container {
+    padding: 15px;
+  }
+
+  .match-list-header,
+  .match-item {
+    /* SỬA LỖI: Xóa chữ 't' bị thừa ở đây */
+    font-size: 14px;
+    /* Điều chỉnh cột cho màn hình nhỏ */
+    grid-template-columns: 1fr 1.5fr 1fr 1fr; /* Cập nhật 4 cột */
+  }
 }
 
 @media (max-width: 500px) {
-    .match-list-header, .match-item {
-        /* Ẩn cột Thời gian và điều chỉnh lại bố cục */
-        grid-template-columns: 1fr 1.5fr 1fr 1.5fr; 
-    }
-    .match-list-header > div:last-child, .match-item > div:last-child {
-        display: none; /* Ẩn cột Thời gian (hoặc thay bằng chỉ icon) */
-    }
+  .match-list-header,
+  .match-item {
+    /* Ẩn cột Thời gian và điều chỉnh lại bố cục */
+    grid-template-columns: 1fr 1.5fr 1fr; /* Cập nhật 3 cột */
+  }
+  .match-list-header > div:last-child,
+  .match-item > div:last-child {
+    display: none; /* Ẩn cột Thời gian (cột cuối cùng) */
+  }
 
-    .header-logo {
-        display: none;
-    }
+  .header-logo {
+    display: none;
+  }
 }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../style/History.css";
-import { Menu, Swords, ArrowRight, ArrowLeft } from "lucide-react";
+import { Menu, Swords, ArrowLeft } from "lucide-react"; // Đã xóa ArrowRight
 
 // Dữ liệu giả lập (để sau này thay thế bằng dữ liệu API thực tế)
 const mockHistoryData = [
@@ -62,18 +62,11 @@ const mockHistoryData = [
   },
 ];
 
-const History = ({ onMenuClick, onViewDetails, onBack }) => {
+// Đã xóa prop 'onViewDetails'
+const History = ({ onMenuClick, onBack }) => {
   const [history, setHistory] = useState(mockHistoryData);
 
-  // Xử lý khi nhấn Xem Chi tiết
-  const handleViewDetails = (matchId) => {
-    // Giả lập logic chuyển trang/hiển thị modal chi tiết
-    if (onViewDetails) {
-      onViewDetails(matchId);
-    } else {
-      console.log(`Xem chi tiết trận đấu ID: ${matchId}`);
-    }
-  };
+  // Đã xóa hàm 'handleViewDetails'
 
   // Component con hiển thị từng dòng trận đấu
   const MatchItem = ({ match }) => {
@@ -85,13 +78,7 @@ const History = ({ onMenuClick, onViewDetails, onBack }) => {
         <div>{match.date}</div>
         <div>{match.opponent}</div>
         <div className={statusClass}>{match.status}</div>
-        <div
-          className="view-details-btn"
-          onClick={() => handleViewDetails(match.id)}
-        >
-          Xem Chi tiết
-          <ArrowRight size={16} />
-        </div>
+        {/* Đã xóa cột 'Xem Chi tiết' */}
         <div>{match.time}</div>
       </div>
     );
@@ -120,7 +107,7 @@ const History = ({ onMenuClick, onViewDetails, onBack }) => {
             <div>Ngày giờ</div>
             <div>Đối thủ</div>
             <div>Kết quả</div>
-            <div></div> {/* Cột Xem Chi tiết */}
+            {/* Đã xóa cột 'Xem Chi tiết' */}
             <div>Thời gian</div>
           </div>
 
