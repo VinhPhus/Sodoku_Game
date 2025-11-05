@@ -1,11 +1,5 @@
-<<<<<<< HEAD
 fastapi
 uvicorn[standard]
-=======
-
->>>>>>> dd5bd978261a6509641e260844fd7942272a7443
-FastAPI
-uvicorn
 sqlalchemy
 pydantic
 python-dotenv
@@ -13,4 +7,3 @@ passlib
 websockets
 pytest
 httpx
-
