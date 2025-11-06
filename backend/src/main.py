@@ -20,7 +20,9 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # cho phép các origin này gọi API và WS
+    # SỬA LỖI: Thay thế ["*"] bằng danh sách origins cụ thể 
+    # vì allow_credentials=True.
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
