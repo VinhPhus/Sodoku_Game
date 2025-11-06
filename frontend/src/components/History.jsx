@@ -66,8 +66,6 @@ const mockHistoryData = [
 const History = ({ onMenuClick, onBack }) => {
   const [history, setHistory] = useState(mockHistoryData);
 
-  // Đã xóa hàm 'handleViewDetails'
-
   // Component con hiển thị từng dòng trận đấu
   const MatchItem = ({ match }) => {
     const isWin = match.status === "THẮNG";

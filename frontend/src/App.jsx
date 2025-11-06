@@ -167,7 +167,7 @@ const App = () => {
             // onViewDetails={handleViewMatchDetails} // Đã xóa
           />
         );
-
+      // nằm ở file app.jsx này này
       default:
         return <div>404 | Screen Not Found</div>;
     }
