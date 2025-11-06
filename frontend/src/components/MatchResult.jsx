@@ -3,21 +3,24 @@ import "../style/MatchResult.css";
 // Giả định icon confetti được thêm dưới dạng emoji hoặc một component SVG
 
 // Dữ liệu giả lập cho màn hình kết quả (có thể nhận từ props)
+// --- THAY ĐỔI 1: Cập nhật mockResultData để bao gồm 'status' ---
 const mockResultData = {
-    // Ghi chú: Cài đặt người chiến thắng ở đây để dễ dàng thay đổi (true/false)
     isUserWinner: true, 
-
     user: {
         name: 'YOU',
+        status: 'Thắng cuộc', // Thêm status
         thoughtTime: '01:58',
         errors: 0,
         timeCompleted: '02:10',
+        isWinner: true,
     },
     opponent: {
         name: 'PLAYER A',
+        status: 'Thua cuộc', // Thêm status
         thoughtTime: '01:30',
         errors: 2,
-        timeCompleted: '-', // Chưa hoàn thành hoặc bị thua
+        timeCompleted: '-', // Thua
+        isWinner: false,
     }
 };
 
@@ -41,25 +44,28 @@ const MatchResult = ({
     onViewHistory = () => console.log('View History clicked')
 }) => {
 
+    // --- THAY ĐỔI 2: Đơn giản hóa logic lấy dữ liệu ---
+    // Dữ liệu đã được chuẩn bị hoàn hảo từ App.jsx
     const userResult = resultData.user;
     const opponentResult = resultData.opponent;
-    const winnerName = resultData.isUserWinner ? user.name : opponent.name;
-    
-    // Đảm bảo dữ liệu người chơi và đối thủ khớp với vị trí winner/loser
-    const player1 = userResult.isWinner ? user : opponent;
-    const player2 = userResult.isWinner ? opponent : user;
-
-    const data1 = userResult.isWinner ? userResult : opponentResult;
-    const data2 = userResult.isWinner ? opponentResult : userResult;
+    const winnerName = resultData.isUserWinner ? userResult.name : opponentResult.name;
     
     // Hộp 1: WINNER (Hoặc người dùng)
     const renderBlock = (player, data, isWinner) => (
         <div className={`player-block ${isWinner ? 'winner' : 'loser'}`}>
             <h4>{player.name}</h4>
             
+            {/* --- THAY ĐỔI 3: Thêm dòng hiển thị KẾT QUẢ (Status) --- */}
+            <div className="stat-item">
+                <span className="stat-label">Kết quả:</span>
+                <span className="stat-value" style={{fontWeight: 700, color: isWinner ? 'var(--color-green)' : 'var(--color-red)'}}>
+                    {data.status || (isWinner ? 'Thắng' : 'Thua')}
+                </span>
+            </div>
+            
             <div className="stat-item">
                 <span className="stat-label">Tổng thời gian Suy nghĩ:</span>
-                <span className="stat-value">{data.thoughtTime}</span>
+                <span className="stat-value">{data.thoughtTime || 'N/A'}</span>
             </div>
             
             <div className="stat-item">
@@ -79,18 +85,19 @@ const MatchResult = ({
         <div className="result-screen">
             <div className="result-card">
                 <header className="result-header">
-                    <ConfettiEmoji />
+                    {/* --- THAY ĐỔI 4: Hiển thị emoji dựa trên kết quả thực tế --- */}
+                    {resultData.isUserWinner ? <ConfettiEmoji /> : <LoserEmoji />}
                     <h2 className="winner-title">
                         NGƯỜI CHIẾN THẮNG: <span>{winnerName.toUpperCase()}</span>
                     </h2>
                 </header>
                 
                 <main className="comparison-container">
-                    {/* Hộp 1: Người dùng/Người chiến thắng */}
-                    {renderBlock(player1, data1, data1.isWinner)}
+                    {/* Hộp 1: Người dùng */}
+                    {renderBlock(user, userResult, resultData.isUserWinner)}
                     
-                    {/* Hộp 2: Đối thủ/Người thua cuộc */}
-                    {renderBlock(player2, data2, data2.isWinner)}
+                    {/* Hộp 2: Đối thủ */}
+                    {renderBlock(opponent, opponentResult, !resultData.isUserWinner)}
                 </main>
                 
                 <footer className="action-buttons">
