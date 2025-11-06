@@ -12,70 +12,67 @@ import History from "./components/History"; // Mới
 const mockInitialUser = { name: "GUEST", id: "u1" };
 const mockInitialOpponent = { name: "AI Opponent", id: "a1" };
 
-const App = () => {
-  // State quản lý màn hình hiện tại:
-  // 'login' | 'lobby' | 'matchSetup' | 'game' | 'matchResult' | 'history'
-  const [screen, setScreen] = useState("login");
+// (Giữ nguyên hằng số thời gian và hàm formatTime)
+const GAME_DURATION_SECONDS = 140; 
 
-  // State lưu trữ thông tin người chơi
+const formatTime = (s) => {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = (s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+};
+
+const App = () => {
+  const [screen, setScreen] = useState("login");
   const [user, setUser] = useState(mockInitialUser);
   const [opponent, setOpponent] = useState(mockInitialOpponent);
-
-  // State lưu trữ kết quả trận đấu để truyền vào MatchResult
   const [lastMatchResult, setLastMatchResult] = useState(null);
 
   // ===============================================
-  // --- 1. Xử lý Luồng Xác thực (LOGIN/REGISTER) ---
+  // --- (Các hàm handleAuthSuccess, handleAcceptChallenge, handleStartGame không đổi) ---
   // ===============================================
-
-  // Hàm được gọi khi Đăng nhập/Đăng ký thành công
   const handleAuthSuccess = (username) => {
-    // Cập nhật tên người dùng và chuyển sang Lobby
     setUser({ ...user, name: username });
     setScreen("lobby");
   };
 
-  // ===============================================
-  // --- 2. Xử lý Luồng Thách đấu (LOBBY) ---
-  // ===============================================
-
-  // Hàm được gọi khi chấp nhận lời mời (từ Lobby)
   const handleAcceptChallenge = (challenger) => {
     setOpponent(challenger);
     setScreen("matchSetup");
   };
 
-  // ===============================================
-  // --- 3. Xử lý Luồng Bắt đầu Game (MATCH SETUP) ---
-  // ===============================================
-
-  // Hàm được gọi khi MatchSetup đếm ngược xong
   const handleStartGame = () => {
     setScreen("game");
   };
-
+  
   // ===============================================
   // --- 4. Xử lý Luồng Kết thúc Game (MAINGAME) ---
   // ===============================================
 
   /**
-   * Hàm xử lý khi người dùng nhấn HOÀN THÀNH (Dự kiến THẮNG)
-   * @param {Array} finalBoard - Trạng thái cuối cùng của bàn cờ (nếu cần chấm điểm)
+   * HÀM 1: Khi người dùng nhấn HOÀN THÀNH (THẮNG)
    */
-  const handleFinishGame = (finalBoard, errors) => {
-    // Giả lập dữ liệu thắng cuộc
+  const handleFinishGame = (finalBoard, errors, timeLeft) => {
+    
+    // Tính toán thời gian hoàn thành
+    const timeUsedInSeconds = GAME_DURATION_SECONDS - timeLeft;
+    const formattedTimeCompleted = formatTime(timeUsedInSeconds); // Thời gian thực của người thắng
+
     const result = {
       isUserWinner: true,
       user: {
         name: user.name,
-        timeCompleted: "02:10",
-        errors: errors,
+        // --- THAY ĐỔI THEO YÊU CẦU 1 & 3 ---
+        timeCompleted: formattedTimeCompleted, // Gán thời gian trôi qua
+        status: "Thắng cuộc",                // Gán trạng thái
+        errors: 1, // (Lỗi giả lập của đối thủ)
         isWinner: true,
       },
       opponent: {
         name: opponent.name,
-        timeCompleted: "03:00",
-        errors: 1,
+        // --- THAY ĐỔI THEO YÊU CẦU 2 & 3 ---
+        timeCompleted: "-",                   // Gán dấu "-"
+        status: "Thua cuộc",                 // Gán trạng thái
+        errors: 1, // (Lỗi giả lập của đối thủ)
         isWinner: false,
       },
     };
@@ -84,22 +81,30 @@ const App = () => {
   };
 
   /**
-   * Hàm xử lý khi người dùng nhấn ĐẦU HÀNG (Dự kiến THUA)
+   * HÀM 2: Khi người dùng ĐẦU HÀNG (THUA)
    */
-  const handleSurrender = (errors) => {
-    // Giả lập dữ liệu thua cuộc
+  const handleSurrender = (errors, timeLeft) => {
+
+    // Tính toán thời gian tại lúc đầu hàng
+    const timeUsedInSeconds = GAME_DURATION_SECONDS - timeLeft;
+    const formattedTimeUsed = formatTime(timeUsedInSeconds); // Thời gian thực của người thắng
+
     const result = {
       isUserWinner: false,
       user: {
         name: user.name,
-        timeCompleted: "Đầu hàng",
+        // --- THAY ĐỔI THEO YÊU CẦU 2 & 3 ---
+        timeCompleted: "-",                   // Gán dấu "-"
+        status: "Đầu hàng",                 // Gán trạng thái
         errors: errors,
         isWinner: false,
       },
       opponent: {
         name: opponent.name,
-        timeCompleted: "01:50",
-        errors: 0,
+        // --- THAY ĐỔI THEO YÊU CẦU 1 & 3 ---
+        timeCompleted: formattedTimeUsed,     // Gán thời gian trôi qua
+        status: "Thắng cuộc",                // Gán trạng thái
+        errors: 0, // (Giả lập đối thủ không có lỗi)
         isWinner: true,
       },
     };
@@ -114,14 +119,14 @@ const App = () => {
   const renderScreen = () => {
     switch (screen) {
       case "login":
-        return <AuthWrapper onAuthSuccess={handleAuthSuccess} />; // Dùng AuthWrapper mới
+        return <AuthWrapper onAuthSuccess={handleAuthSuccess} />; 
 
       case "lobby":
         return (
           <Lobby
             user={user}
             onAcceptChallenge={handleAcceptChallenge}
-            onViewHistory={() => setScreen("history")} // Thêm luồng đến History
+            onViewHistory={() => setScreen("history")} 
             onLogout={() => setScreen("login")}
           />
         );
@@ -140,8 +145,8 @@ const App = () => {
           <Maingame
             user={user}
             opponent={opponent}
-            onFinish={handleFinishGame} // Kết thúc (THẮNG)
-            onSurrender={handleSurrender} // Đầu hàng (THUA)
+            onFinish={handleFinishGame} // (Đã cập nhật)
+            onSurrender={handleSurrender} // (Đã cập nhật)
           />
         );
 
@@ -160,8 +165,8 @@ const App = () => {
       case "history":
         return (
           <History
-            onMenuClick={() => setScreen("lobby")} // Quay lại Lobby
-            onBack={() => setScreen("lobby")} // Quay lại Lobby qua nút "Quay lại"
+            onMenuClick={() => setScreen("lobby")} 
+            onBack={() => setScreen("lobby")}
           />
         );
 

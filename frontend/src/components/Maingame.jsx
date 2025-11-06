@@ -35,15 +35,18 @@ const solutionBoard = [
     [3, 4, 5, 2, 8, 6, 1, 7, 9],
 ];
 
+// --- THAY ĐỔI 1: Định nghĩa hằng số thời gian (tính bằng giây) ---
+// (Ví dụ của bạn là 3 phút = 180s, mã gốc là 140s. Tôi dùng 140s để khớp mã gốc)
+const GAME_DURATION_SECONDS = 140; 
+
 
 // Component con: Sudoku Cell
 const SudokuCell = ({ value, isDefault, isSelected, isError, onCellClick }) => {
-    // Giá trị thực tế hoặc nốt bút chì
+    // ... (Không thay đổi)
     const displayValue = Array.isArray(value) 
         ? <div className="pencil-marks">{value.map((n, i) => <span key={i}>{n}</span>)}</div> 
         : (value === 0 ? '' : value);
     
-    // isPlayerInput: Là số do người chơi điền (không phải số mặc định và không phải là ghi chú/array)
     const isPlayerInput = value !== 0 && !isDefault && !Array.isArray(value);
 
     const className = `cell 
@@ -62,16 +65,14 @@ const SudokuCell = ({ value, isDefault, isSelected, isError, onCellClick }) => {
 
 
 // Component chính
-// Khai báo giá trị mặc định cho user/opponent để tránh lỗi nếu App.jsx chưa truyền đủ props
 const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onSurrender = () => {}, onFinish = () => {} }) => {
     const [board, setBoard] = useState(initialBoard);
     const [selectedCell, setSelectedCell] = useState(null); // {row, col}
-    const [errorCells, setErrorCells] = useState(new Set()); // Dùng Set để quản lý ô lỗi hiệu quả
+    const [errorCells, setErrorCells] = useState(new Set()); 
     
-    // --- THAY ĐỔI 1: Đã XÓA state 'errorCount' ---
-    // const [errorCount, setErrorCount] = useState(0); 
-
-    const [timeLeft, setTimeLeft] = useState(140); // seconds (02:20)
+    // --- THAY ĐỔI 2: Sử dụng hằng số thời gian ---
+    const [timeLeft, setTimeLeft] = useState(GAME_DURATION_SECONDS); // seconds
+    
     const [tool, setTool] = useState('normal'); // 'normal', 'pencil', 'eraser'
     const [showSurrenderDialog, setShowSurrenderDialog] = useState(false);
     const [chats, setChats] = useState([
@@ -95,6 +96,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
     };
 
     const handleCellClick = (row, col) => {
+        // ... (Không thay đổi)
         if (defaultCells[row][col]) {
             setSelectedCell(null);
             return; 
@@ -102,8 +104,8 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
         setSelectedCell({ row, col });
     };
 
-    // --- THAY ĐỔI 2: Cập nhật logic xử lý lỗi trong handleNumberInput ---
     const handleNumberInput = async (number) => {
+        // ... (Không thay đổi)
         if (!selectedCell) return;
         const { row, col } = selectedCell;
         if (defaultCells[row][col]) return; 
@@ -111,98 +113,74 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
         const newBoard = board.map(r => [...r]);
 
         if (tool === 'pencil') {
-            // Chế độ ghi chú (Bút chì)
             let notes = Array.isArray(newBoard[row][col]) ? newBoard[row][col] : [];
-            
-            // Nếu ô đã có số chính thức, không thể thêm ghi chú
             if (typeof newBoard[row][col] === 'number' && newBoard[row][col] !== 0) return;
-
             const noteIndex = notes.indexOf(number);
             if (noteIndex > -1) {
-                notes.splice(noteIndex, 1); // Xóa ghi chú
+                notes.splice(noteIndex, 1);
             } else {
-                notes.push(number); // Thêm ghi chú
+                notes.push(number);
                 notes.sort((a, b) => a - b);
             }
             newBoard[row][col] = notes.length > 0 ? notes : 0;
             
         } else if (tool === 'eraser') {
             newBoard[row][col] = 0;
-            // Nếu xóa ô, cũng xóa lỗi khỏi ô đó
             const newErrors = new Set(errorCells);
             newErrors.delete(`${row}-${col}`);
             setErrorCells(newErrors);
-        } else { // tool === 'normal' (Điền số chính thức)
+        } else { 
             newBoard[row][col] = number;
             try {
                 const requestBody = {
-                    board: newBoard, // Gửi bảng MỚI sau khi điền số
+                    board: newBoard, 
                     row: row,
                     col: col,
                     value: number
                 };
 
-                // Giả định API chạy trên cổng 8000
                 const response = await fetch('http://localhost:8000/validate', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody),
                 });
 
-                if (!response.ok) {
-                    throw new Error('API call failed');
-                }
-
-                const result = await response.json(); // { isValid: true/false }
-
-                // Cập nhật state lỗi
+                if (!response.ok) throw new Error('API call failed');
+                const result = await response.json(); 
                 const newErrors = new Set(errorCells);
                 const cellKey = `${row}-${col}`;
 
                 if (result.isValid) {
-                    // Nước đi HỢP LỆ: Xóa lỗi (nếu có) khỏi ô này
                     newErrors.delete(cellKey);
                 } else {
-                    // Nước đi KHÔNG HỢP LỆ: Thêm ô này vào danh sách lỗi
                     newErrors.add(cellKey);
-
-                    // KIỂM TRA THUA CUỘC (Yêu cầu mới)
-                    // Chúng ta kiểm tra newErrors.size (số lỗi HIỆN TẠI)
                     if (newErrors.size >= 5) {
-                        setBoard(newBoard); // Cập nhật bảng để người dùng thấy nước đi sai
-                        setErrorCells(newErrors); // Cập nhật các ô lỗi
+                        setBoard(newBoard); 
+                        setErrorCells(newErrors);
                         
-                        // Gọi onSurrender (hàm thua cuộc) với số lỗi hiện tại
-                        // Thêm một chút delay để người dùng thấy ô đỏ trước khi thua
                         setTimeout(() => {
                             alert("Bạn đã mắc 5 lỗi! Trò chơi kết thúc.");
-                            // Truyền số lỗi hiện tại
-                            onSurrender(newErrors.size); 
+                            // --- THAY ĐỔI 3: Truyền timeLeft khi tự động thua ---
+                            onSurrender(newErrors.size, timeLeft); 
                         }, 500);
-                        return; // Dừng hàm tại đây
+                        return; 
                     }
                 }
-                // Cập nhật state lỗi (nếu chưa thua)
                 setErrorCells(newErrors);
 
             } catch (error) {
                 console.error("Lỗi khi kiểm tra nước đi:", error);
-                // Có thể thêm xử lý báo lỗi API cho người dùng
             }
-            // --- KẾT THÚC GỌI API ---
-            }
-
+        }
         setBoard(newBoard);
     };
     
     const handleDelete = () => {
+        // ... (Không thay đổi)
         if (!selectedCell) return;
         const { row, col } = selectedCell;
         if (defaultCells[row][col]) return;
         
-        // Khi xóa số, cũng xóa lỗi khỏi ô đó
         const newErrors = new Set(errorCells);
         newErrors.delete(`${row}-${col}`);
         setErrorCells(newErrors);
@@ -214,9 +192,8 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
         });
     };
     
-    // --- CHỨC NĂNG BÓNG ĐÈN (GỢI Ý) ---
     const handleHint = () => {
-        // Tìm ô trống đầu tiên (không phải ô mặc định và chưa có số chính thức)
+        // ... (Không thay đổi)
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
                 if (!defaultCells[r][c] && (board[r][c] === 0 || Array.isArray(board[r][c]))) {
@@ -224,7 +201,6 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                     const hintValue = solutionBoard[r][c];
                     newBoard[r][c] = hintValue;
                     
-                    // Khi gợi ý, chúng ta giả định nó đúng và xóa lỗi (nếu có)
                     const newErrors = new Set(errorCells);
                     newErrors.delete(`${r}-${c}`);
                     setErrorCells(newErrors);
@@ -238,45 +214,42 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
     };
 
     const handleSendChat = () => {
+        // ... (Không thay đổi)
         if (chatInput.trim() === '') return;
-        
         const newChat = {
             sender: user.name || "Bạn",
             text: chatInput.trim(),
             isMe: true,
         };
-
         setChats(prev => [...prev, newChat]);
         setChatInput('');
-        // Logic gửi tin nhắn đến đối thủ (giả lập)
     };
 
 
-    const handleSurrender = () => {
+    const handleSurrenderClick = () => { // Đổi tên hàm để tránh nhầm lẫn
         setShowSurrenderDialog(true);
     };
 
-    // --- THAY ĐỔI 3: Cập nhật hàm xác nhận đầu hàng ---
     const handleConfirmSurrender = () => {
         setShowSurrenderDialog(false);
-        // Truyền số lỗi HIỆN TẠI (errorCells.size)
-        onSurrender(errorCells.size);
+        // --- THAY ĐỔI 4: Truyền timeLeft khi xác nhận đầu hàng ---
+        onSurrender(errorCells.size, timeLeft);
     };
 
     const handleCancelSurrender = () => {
         setShowSurrenderDialog(false);
     };
 
-    // --- THAY ĐỔI 4: Cập nhật hàm hoàn thành ---
     const handleFinish = () => {
         if (window.confirm("Bạn có chắc chắn muốn Hoàn Thành? Bài sẽ được gửi để chấm điểm.")) {
-            // Truyền số lỗi HIỆN TẠI (errorCells.size)
-            onFinish(board, errorCells.size); 
+            // --- THAY ĐỔI 5: Truyền timeLeft khi hoàn thành ---
+            onFinish(board, errorCells.size, timeLeft); 
         }
     };
 
     // Hàm render bảng Sudoku
     const renderGrid = () => {
+        // ... (Không thay đổi)
         const rows = [];
         for (let r = 0; r < 9; r++) {
             const rowCells = [];
@@ -294,7 +267,6 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                     />
                 );
             }
-            // Sửa lại class name để khớp với CSS (sudoku-row thay cho cell-row)
             rows.push(<div key={r} className="sudoku-row">{rowCells}</div>);
         }
         return <div className="sudoku-grid">{rows}</div>;
@@ -310,6 +282,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                 />
             )}
             <header className="game-header">
+                {/* ... (Header JSX không thay đổi) ... */}
                 <div className="header-left">
                     <span className="header-logo"><Swords size={20} style={{marginRight: 5}}/>Sudoku Battle</span>
                     <div className="score-board">
@@ -320,7 +293,8 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                 </div>
                 <div className="timer">{formatTime(timeLeft)}</div>
                 <div className="header-actions">
-                    <button className="surrender-button" onClick={handleSurrender}>
+                    {/* Cập nhật onClick để gọi đúng hàm */}
+                    <button className="surrender-button" onClick={handleSurrenderClick}>
                         <LogOut size={18} /> Đầu Hàng
                     </button>
                     <Menu className="menu-icon" size={24} />
@@ -331,13 +305,12 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                 
                 {/* --- Cột Trái: Sudoku Grid & Controls --- */}
                 <section className="sudoku-section">
+                    {/* ... (Không thay đổi) ... */}
                     <div className="sudoku-grid-container">
                         {renderGrid()}
                     </div>
                     
                     <div className="controls-area">
-                        
-                        {/* 2. Nút Nhập số */}
                         <div className="number-buttons-container">
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                                 <button key={num} className="number-button" onClick={() => handleNumberInput(num)}>
@@ -348,8 +321,6 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                                 <X size={20} />
                             </button>
                         </div>
-
-                        {/* 1. Nút Công cụ & Hoàn thành (được sắp xếp lại theo Figma) */}
                         <div className="tool-buttons">
                             <button className={`tool-button ${tool === 'pencil' ? 'active' : ''}`} onClick={() => setTool(tool === 'pencil' ? 'normal' : 'pencil')}>
                                 <PenLine size={18} /> Bút chì
@@ -369,14 +340,11 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
 
                 {/* --- Cột Phải: Sidebar --- */}
                 <aside className="game-sidebar">
-                    {/* 1. Bảng Xếp Hạng Mini (KHÔI PHỤC THEO FIGMA) */}
+                    {/* ... (Sidebar JSX không thay đổi) ... */}
                     <div className="leaderboard-card">
                         <h3>Người chơi</h3>
-                        {/* YOU */}
                         <div className="player-score-item">
                             <div className="player-info-min">
-                                <span className="player-name-min">Bạn</span>
-                                {/* --- THAY ĐỔI 5: Hiển thị errorCells.size --- */}
                                 <span className="player-name-min">Bạn (Lỗi: {errorCells.size})</span>
                                 <span className="player-time-min">Tổng thời gian: 01:20</span>
                             </div>
@@ -384,7 +352,6 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                                 <div className="progress-fill" style={{ width: '85%' }}></div>
                             </div>
                         </div>
-                        {/* PLAYER A */}
                         <div className="player-score-item">
                             <div className="player-info-min">
                                 <span className="player-name-min">{opponent.name || "PLAYER A"}</span>
@@ -394,7 +361,6 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                                 <div className="progress-fill" style={{ width: '70%' }}></div>
                             </div>
                         </div>
-                         {/* ĐỐI THỦ (Thành phần phụ, dựa trên Figma) */}
                          <div className="player-score-item">
                             <div className="player-info-min">
                                 <span className="player-name-min">ĐỐI THỦ</span>
@@ -405,8 +371,6 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                             </div>
                         </div>
                     </div>
-
-                    {/* 2. Chat Mini */}
                     <div className="chat-card">
                         <h3>Chat Mini</h3>
                         <div className="chat-box">
