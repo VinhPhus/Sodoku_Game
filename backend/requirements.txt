@@ -1,4 +1,7 @@
 
+fastapi
+uvicorn[standard]
+
 
 FastAPI
 uvicorn
@@ -9,4 +12,3 @@ passlib
 websockets
 pytest
 httpx
-

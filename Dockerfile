@@ -1,25 +1,27 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3-slim
+# Dockerfile đa mục tiêu (multi-stage build)
 
-EXPOSE 8000
-
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
-
-# Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
+# ======================
+# 1️⃣ Backend Stage
+# ======================
+FROM python:3.11-slim AS backend
 
 WORKDIR /app
-COPY . /app
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY backend /app
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
+# ======================
+# 2️⃣ Frontend Stage
+# ======================
+FROM node:22-alpine AS frontend
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "backend.main:app"]
+WORKDIR /app
+COPY frontend/package*.json ./
+RUN npm install
+RUN npm install lucide-react
+COPY frontend /app
+RUN npm run build
+EXPOSE 5173
+CMD ["npm", "run", "dev"]

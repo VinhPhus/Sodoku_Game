@@ -1,33 +1,28 @@
-from sqlalchemy import create_engine
-from sqlalchemy import text
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
-import urllib
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import declarative_base, sessionmaker
+import os
+from dotenv import load_dotenv
+# jhvjh
+# Load file .env
+load_dotenv()
 
-params = urllib.parse.quote_plus(
-    "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=DESKTOP-4517TCE\\SQLEXPRESS;"
-    "DATABASE=sodoku;"
-    "Trusted_Connection=yes;"
-    "TrustServerCertificate=yes;"
-)
+# Lấy DATABASE_URL từ .env
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={params}"
+# Tạo engine
+# echo=True để debug SQL nếu cần
+engine = create_engine(DATABASE_URL, echo=True)
 
-engine = create_engine(DATABASE_URL)
+# Tạo session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base để các model kế thừa
 Base = declarative_base()
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-if __name__ == "__main__":
+# ====== Xác nhận kết nối ======
+try:
     with engine.connect() as conn:
-        result = conn.execute(text("SELECT @@VERSION"))
-        print(result.fetchone())
+        result = conn.execute(text("SELECT 1"))
+        print("✅ Connected to database successfully! Result:", result.scalar())
+except Exception as e:
+    print("❌ Connection failed:", e)

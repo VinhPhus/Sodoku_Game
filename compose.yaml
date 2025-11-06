@@ -1,8 +1,11 @@
 services:
-  sodokugame:
-    image: sodokugame
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: sodoku
     ports:
-      - 8000:8000
+      - "5432:5432"
+    volumes:
+      - ./data/db:/var/lib/postgresql/data

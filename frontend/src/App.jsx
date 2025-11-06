@@ -72,7 +72,6 @@ const App = () => {
         errors: errors,
         isWinner: true,
       },
-      // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
       opponent: {
         name: opponent.name,
         timeCompleted: "03:00",
@@ -97,7 +96,6 @@ const App = () => {
         errors: errors,
         isWinner: false,
       },
-      // BẠN ĐÃ LÀM MẤT DỮ LIỆU NÀY:
       opponent: {
         name: opponent.name,
         timeCompleted: "01:50",
@@ -162,12 +160,11 @@ const App = () => {
       case "history":
         return (
           <History
-            onMenuClick={() => setScreen("lobby")} // Quay lại Lobby qua icon Menu
-            onBack={() => setScreen("lobby")} // CẬP NHẬT: Quay lại Lobby qua nút "Quay lại"
-            // onViewDetails={handleViewMatchDetails} // Đã xóa
+            onMenuClick={() => setScreen("lobby")} // Quay lại Lobby
+            onBack={() => setScreen("lobby")} // Quay lại Lobby qua nút "Quay lại"
           />
         );
-      // nằm ở file app.jsx này này
+
       default:
         return <div>404 | Screen Not Found</div>;
     }
