@@ -67,7 +67,10 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
     const [board, setBoard] = useState(initialBoard);
     const [selectedCell, setSelectedCell] = useState(null); // {row, col}
     const [errorCells, setErrorCells] = useState(new Set()); // Dùng Set để quản lý ô lỗi hiệu quả
-    const [errorCount, setErrorCount] = useState(0); //
+    
+    // --- THAY ĐỔI 1: Đã XÓA state 'errorCount' ---
+    // const [errorCount, setErrorCount] = useState(0); 
+
     const [timeLeft, setTimeLeft] = useState(140); // seconds (02:20)
     const [tool, setTool] = useState('normal'); // 'normal', 'pencil', 'eraser'
     const [showSurrenderDialog, setShowSurrenderDialog] = useState(false);
@@ -99,6 +102,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
         setSelectedCell({ row, col });
     };
 
+    // --- THAY ĐỔI 2: Cập nhật logic xử lý lỗi trong handleNumberInput ---
     const handleNumberInput = async (number) => {
         if (!selectedCell) return;
         const { row, col } = selectedCell;
@@ -124,6 +128,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
             
         } else if (tool === 'eraser') {
             newBoard[row][col] = 0;
+            // Nếu xóa ô, cũng xóa lỗi khỏi ô đó
             const newErrors = new Set(errorCells);
             newErrors.delete(`${row}-${col}`);
             setErrorCells(newErrors);
@@ -157,13 +162,29 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                 const cellKey = `${row}-${col}`;
 
                 if (result.isValid) {
-                    newErrors.delete(cellKey); // Xóa lỗi nếu nước đi hợp lệ
+                    // Nước đi HỢP LỆ: Xóa lỗi (nếu có) khỏi ô này
+                    newErrors.delete(cellKey);
                 } else {
-                    newErrors.add(cellKey); // Thêm lỗi nếu nước đi KHÔNG hợp lệ
-                    if (!errorCells.has(cellKey)) {
-                        setErrorCount(prevCount => prevCount + 1);
+                    // Nước đi KHÔNG HỢP LỆ: Thêm ô này vào danh sách lỗi
+                    newErrors.add(cellKey);
+
+                    // KIỂM TRA THUA CUỘC (Yêu cầu mới)
+                    // Chúng ta kiểm tra newErrors.size (số lỗi HIỆN TẠI)
+                    if (newErrors.size >= 5) {
+                        setBoard(newBoard); // Cập nhật bảng để người dùng thấy nước đi sai
+                        setErrorCells(newErrors); // Cập nhật các ô lỗi
+                        
+                        // Gọi onSurrender (hàm thua cuộc) với số lỗi hiện tại
+                        // Thêm một chút delay để người dùng thấy ô đỏ trước khi thua
+                        setTimeout(() => {
+                            alert("Bạn đã mắc 5 lỗi! Trò chơi kết thúc.");
+                            // Truyền số lỗi hiện tại
+                            onSurrender(newErrors.size); 
+                        }, 500);
+                        return; // Dừng hàm tại đây
                     }
                 }
+                // Cập nhật state lỗi (nếu chưa thua)
                 setErrorCells(newErrors);
 
             } catch (error) {
@@ -175,13 +196,17 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
 
         setBoard(newBoard);
     };
+    
     const handleDelete = () => {
         if (!selectedCell) return;
         const { row, col } = selectedCell;
         if (defaultCells[row][col]) return;
+        
+        // Khi xóa số, cũng xóa lỗi khỏi ô đó
         const newErrors = new Set(errorCells);
         newErrors.delete(`${row}-${col}`);
         setErrorCells(newErrors);
+
         setBoard(prev => {
             const copy = prev.map(r => r.slice());
             copy[row][col] = 0;
@@ -198,8 +223,13 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                     const newBoard = board.map(row => [...row]);
                     const hintValue = solutionBoard[r][c];
                     newBoard[r][c] = hintValue;
+                    
+                    // Khi gợi ý, chúng ta giả định nó đúng và xóa lỗi (nếu có)
+                    const newErrors = new Set(errorCells);
+                    newErrors.delete(`${r}-${c}`);
+                    setErrorCells(newErrors);
+
                     setBoard(newBoard);
-                    // alert(`Gợi ý: Ô (${r+1}, ${c+1}) được điền số ${hintValue}`); // Có thể tắt alert khi chạy thực tế
                     setSelectedCell(null);
                     return;
                 }
@@ -226,18 +256,22 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
         setShowSurrenderDialog(true);
     };
 
+    // --- THAY ĐỔI 3: Cập nhật hàm xác nhận đầu hàng ---
     const handleConfirmSurrender = () => {
         setShowSurrenderDialog(false);
-        onSurrender(errorCount);
+        // Truyền số lỗi HIỆN TẠI (errorCells.size)
+        onSurrender(errorCells.size);
     };
 
     const handleCancelSurrender = () => {
         setShowSurrenderDialog(false);
     };
 
+    // --- THAY ĐỔI 4: Cập nhật hàm hoàn thành ---
     const handleFinish = () => {
         if (window.confirm("Bạn có chắc chắn muốn Hoàn Thành? Bài sẽ được gửi để chấm điểm.")) {
-            onFinish(board, errorCount); 
+            // Truyền số lỗi HIỆN TẠI (errorCells.size)
+            onFinish(board, errorCells.size); 
         }
     };
 
@@ -255,7 +289,7 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                         value={board[r][c]}
                         isDefault={defaultCells[r][c]}
                         isSelected={selectedCell?.row === r && selectedCell?.col === c}
-                        isError={isError} // Cần logic kiểm tra lỗi thực tế
+                        isError={isError} 
                         onCellClick={() => handleCellClick(r, c)}
                     />
                 );
@@ -342,7 +376,8 @@ const Maingame = ({ user = { name: 'YOU' }, opponent = { name: 'PLAYER A' }, onS
                         <div className="player-score-item">
                             <div className="player-info-min">
                                 <span className="player-name-min">Bạn</span>
-                                <span className="player-name-min">Bạn (Lỗi: {errorCount})</span>
+                                {/* --- THAY ĐỔI 5: Hiển thị errorCells.size --- */}
+                                <span className="player-name-min">Bạn (Lỗi: {errorCells.size})</span>
                                 <span className="player-time-min">Tổng thời gian: 01:20</span>
                             </div>
                             <div className="progress-bar-min">
