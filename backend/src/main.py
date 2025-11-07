@@ -1,6 +1,8 @@
 # src/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 from .routes import auth_api, user_api, history_api, leaderboard_api
 from .sockets.socket_server import router as websocket_router
 
@@ -37,8 +39,13 @@ app.include_router(leaderboard_api.router, prefix="/api/leaderboard", tags=["Lea
 # --- Gắn router WebSocket ---
 app.include_router(websocket_router, tags=["WebSocket"])
 
-@app.get("/")
-async def root():
-    return {"message": "Sudoku API is running. WebSocket at /ws/game"}
+# Nếu Docker build đã copy frontend build vào /app/frontend_dist, mount SPA ở root
+if os.path.isdir("frontend_dist"):
+    # mount SPA as the root; API routes are under /api so they remain available
+    app.mount("/", StaticFiles(directory="frontend_dist", html=True), name="frontend")
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "Sudoku API is running. WebSocket at /ws/game"}
 
 print("✅ Đã tải: src/main.py - Ứng dụng FastAPI 'app' đã sẵn sàng.")
