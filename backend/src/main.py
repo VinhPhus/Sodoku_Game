@@ -22,7 +22,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    # SỬA LỖI: Thay thế ["*"] bằng danh sách origins cụ thể 
+    # SỬA LỖI: Thay thế ["*"] bằng danh sách origins cụ thể
     # vì allow_credentials=True.
     allow_origins=origins,
     allow_credentials=True,
@@ -34,7 +34,8 @@ app.add_middleware(
 app.include_router(auth_api.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(user_api.router, prefix="/api/users", tags=["Users"])
 app.include_router(history_api.router, prefix="/api/history", tags=["History"])
-app.include_router(leaderboard_api.router, prefix="/api/leaderboard", tags=["Leaderboard"])
+app.include_router(leaderboard_api.router,
+                   prefix="/api/leaderboard", tags=["Leaderboard"])
 
 # --- Gắn router WebSocket ---
 app.include_router(websocket_router, tags=["WebSocket"])
@@ -42,7 +43,8 @@ app.include_router(websocket_router, tags=["WebSocket"])
 # Nếu Docker build đã copy frontend build vào /app/frontend_dist, mount SPA ở root
 if os.path.isdir("frontend_dist"):
     # mount SPA as the root; API routes are under /api so they remain available
-    app.mount("/", StaticFiles(directory="frontend_dist", html=True), name="frontend")
+    app.mount("/", StaticFiles(directory="frontend_dist",
+              html=True), name="frontend")
 else:
     @app.get("/")
     async def root():
