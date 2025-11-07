@@ -1,26 +1,6 @@
+version: "3.9"
+
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: backend # ⬅️ Dùng stage backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      - DATABASE_URL=postgresql://postgres:123456@db:5432/sudoku_game
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: frontend # ⬅️ Dùng stage frontend
-    ports:
-      - "5173:5173"
-    depends_on:
-      - backend
-
   db:
     image: postgres:15
     environment:
@@ -29,3 +9,30 @@ services:
       POSTGRES_DB: sudoku_game
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:123456@db:5432/sudoku_game
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+volumes:
+  pgdata:

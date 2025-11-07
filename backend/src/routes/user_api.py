@@ -1,13 +1,35 @@
 # src/routes/user_api.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from src.services.database_service import get_db, get_user_by_id, get_user_by_username, create_user
+from typing import List  # <-- THÊM IMPORT NÀY
+
+from src.services.database_service import (
+    get_db,
+    get_user_by_id,
+    get_user_by_username,
+    create_user,
+    get_users  # <-- THÊM IMPORT NÀY
+)
 from src.models.schemas import UserCreate, UserResponse
-from src.utils.security import hash_password  # Bạn tự định nghĩa hàm hash_password
+from src.utils.security import hash_password
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-# Tạo user mới
+# --- THÊM ENDPOINT MỚI NÀY VÀO ĐÂY ---
+
+
+@router.get("/", response_model=List[UserResponse])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Lấy danh sách tất cả người dùng.
+    """
+    users = get_users(db, skip=skip, limit=limit)
+    return users
+# --- HẾT ENDPOINT MỚI ---
+
+# Tạo user mới (endpoint cũ)
+
+
 @router.post("/", response_model=UserResponse)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = get_user_by_username(db, user.username)
