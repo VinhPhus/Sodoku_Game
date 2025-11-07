@@ -233,6 +233,35 @@
   transition: transform 0.3s ease;
 }
 
+/* THÊM MỚI: Nút chỉnh sửa avatar */
+.edit-avatar-button {
+  position: absolute;
+  bottom: 5px; /* Khoảng cách từ dưới lên */
+  right: 5px; /* Khoảng cách từ phải qua */
+  width: 32px;
+  height: 32px;
+  background-color: rgba(28, 30, 33, 0.75); /* Nền mờ */
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0; /* Reset padding */
+  transition: background-color 0.2s ease;
+}
+
+.edit-avatar-button:hover {
+  background-color: rgba(0, 0, 0, 1); /* Đậm hơn khi hover */
+}
+
+.edit-avatar-button svg {
+  width: 16px;
+  height: 16px;
+}
+/* KẾT THÚC THÊM MỚI */
+
 .user-avatar:hover {
   transform: scale(1.05);
 }

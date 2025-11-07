@@ -1,23 +1,28 @@
+// ...existing code...
 import React, { useState } from "react";
-import "./style/index.css"; // File CSS toàn cục
+// import "./style/index.css"; // File CSS toàn cục - Đã được import trong main.jsx
 // Import tất cả các components cần thiết
-import AuthWrapper from "./components/AuthWrapper"; // Mới: Quản lý Login/Register
-import Lobby from "./components/Lobby";
-import MatchSetup from "./components/MatchSetup";
-import Maingame from "./components/Maingame";
-import MatchResult from "./components/MatchResult"; // Mới
-import History from "./components/History"; // Mới
+import AuthWrapper from "./components/AuthWrapper.jsx"; // Mới: Quản lý Login/Register
+import Lobby from "./components/Lobby.jsx";
+import MatchSetup from "./components/MatchSetup.jsx";
+import Maingame from "./components/Maingame.jsx";
+import MatchResult from "./components/MatchResult.jsx"; // Mới
+import History from "./components/History.jsx"; // Mới
+import AvatarEditModal from "./components/AvatarEditModal.jsx"; // Mới: modal chỉnh avatar
+// ...existing code...
 
 // Dữ liệu giả lập về trận đấu
-const mockInitialUser = { name: "GUEST", id: "u1" };
+const mockInitialUser = { name: "GUEST", id: "u1", avatar: "" };
 const mockInitialOpponent = { name: "AI Opponent", id: "a1" };
 
 // (Giữ nguyên hằng số thời gian và hàm formatTime)
-const GAME_DURATION_SECONDS = 140; 
+const GAME_DURATION_SECONDS = 140;
 
 const formatTime = (s) => {
-  const m = Math.floor(s / 60).toString().padStart(2, '0');
-  const sec = (s % 60).toString().padStart(2, '0');
+  const m = Math.floor(s / 60)
+    .toString()
+    .padStart(2, "0");
+  const sec = (s % 60).toString().padStart(2, "0");
   return `${m}:${sec}`;
 };
 
@@ -27,11 +32,15 @@ const App = () => {
   const [opponent, setOpponent] = useState(mockInitialOpponent);
   const [lastMatchResult, setLastMatchResult] = useState(null);
 
+  // NEW: avatar modal state
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [localAvatarPreview, setLocalAvatarPreview] = useState(""); // store preview URL before saving
+
   // ===============================================
   // --- (Các hàm handleAuthSuccess, handleAcceptChallenge, handleStartGame không đổi) ---
   // ===============================================
   const handleAuthSuccess = (username) => {
-    setUser({ ...user, name: username });
+    setUser((u) => ({ ...u, name: username }));
     setScreen("lobby");
   };
 
@@ -43,36 +52,48 @@ const App = () => {
   const handleStartGame = () => {
     setScreen("game");
   };
-  
+
+  // ===============================================
+  // --- Avatar edit handlers (Mới) ---
+  // ===============================================
+  const openAvatarEditor = () => {
+    setLocalAvatarPreview(user.avatar || "");
+    setIsAvatarModalOpen(true);
+  };
+
+  const handleSaveAvatar = (previewUrl) => {
+    // Lưu URL xem trước vào state user
+    setUser((u) => ({ ...u, avatar: previewUrl }));
+    setLocalAvatarPreview(previewUrl);
+    setIsAvatarModalOpen(false);
+  };
+
+  const handleCloseAvatarModal = () => {
+    setIsAvatarModalOpen(false);
+    setLocalAvatarPreview("");
+  };
+
   // ===============================================
   // --- 4. Xử lý Luồng Kết thúc Game (MAINGAME) ---
   // ===============================================
-
-  /**
-   * HÀM 1: Khi người dùng nhấn HOÀN THÀNH (THẮNG)
-   */
   const handleFinishGame = (finalBoard, errors, timeLeft) => {
-    
-    // Tính toán thời gian hoàn thành
     const timeUsedInSeconds = GAME_DURATION_SECONDS - timeLeft;
-    const formattedTimeCompleted = formatTime(timeUsedInSeconds); // Thời gian thực của người thắng
+    const formattedTimeCompleted = formatTime(timeUsedInSeconds);
 
     const result = {
       isUserWinner: true,
       user: {
         name: user.name,
-        // --- THAY ĐỔI THEO YÊU CẦU 1 & 3 ---
-        timeCompleted: formattedTimeCompleted, // Gán thời gian trôi qua
-        status: "Thắng cuộc",                // Gán trạng thái
-        errors: 1, // (Lỗi giả lập của đối thủ)
+        timeCompleted: formattedTimeCompleted,
+        status: "Thắng cuộc",
+        errors: 1,
         isWinner: true,
       },
       opponent: {
         name: opponent.name,
-        // --- THAY ĐỔI THEO YÊU CẦU 2 & 3 ---
-        timeCompleted: "-",                   // Gán dấu "-"
-        status: "Thua cuộc",                 // Gán trạng thái
-        errors: 1, // (Lỗi giả lập của đối thủ)
+        timeCompleted: "-",
+        status: "Thua cuộc",
+        errors: 1,
         isWinner: false,
       },
     };
@@ -80,31 +101,24 @@ const App = () => {
     setScreen("matchResult");
   };
 
-  /**
-   * HÀM 2: Khi người dùng ĐẦU HÀNG (THUA)
-   */
   const handleSurrender = (errors, timeLeft) => {
-
-    // Tính toán thời gian tại lúc đầu hàng
     const timeUsedInSeconds = GAME_DURATION_SECONDS - timeLeft;
-    const formattedTimeUsed = formatTime(timeUsedInSeconds); // Thời gian thực của người thắng
+    const formattedTimeUsed = formatTime(timeUsedInSeconds);
 
     const result = {
       isUserWinner: false,
       user: {
         name: user.name,
-        // --- THAY ĐỔI THEO YÊU CẦU 2 & 3 ---
-        timeCompleted: "-",                   // Gán dấu "-"
-        status: "Đầu hàng",                 // Gán trạng thái
+        timeCompleted: "-",
+        status: "Đầu hàng",
         errors: errors,
         isWinner: false,
       },
       opponent: {
         name: opponent.name,
-        // --- THAY ĐỔI THEO YÊU CẦU 1 & 3 ---
-        timeCompleted: formattedTimeUsed,     // Gán thời gian trôi qua
-        status: "Thắng cuộc",                // Gán trạng thái
-        errors: 0, // (Giả lập đối thủ không có lỗi)
+        timeCompleted: formattedTimeUsed,
+        status: "Thắng cuộc",
+        errors: 0,
         isWinner: true,
       },
     };
@@ -115,19 +129,19 @@ const App = () => {
   // ===============================================
   // --- 5. Logic Hiển thị (RENDER) ---
   // ===============================================
-
   const renderScreen = () => {
     switch (screen) {
       case "login":
-        return <AuthWrapper onAuthSuccess={handleAuthSuccess} />; 
+        return <AuthWrapper onAuthSuccess={handleAuthSuccess} />;
 
       case "lobby":
         return (
           <Lobby
             user={user}
             onAcceptChallenge={handleAcceptChallenge}
-            onViewHistory={() => setScreen("history")} 
+            onViewHistory={() => setScreen("history")}
             onLogout={() => setScreen("login")}
+            onEditAvatar={openAvatarEditor} // Mới: cho phép mở modal từ Lobby
           />
         );
 
@@ -137,6 +151,7 @@ const App = () => {
             user={user}
             opponent={opponent}
             onStartGame={handleStartGame}
+            onBack={() => setScreen("lobby")}
           />
         );
 
@@ -145,8 +160,8 @@ const App = () => {
           <Maingame
             user={user}
             opponent={opponent}
-            onFinish={handleFinishGame} // (Đã cập nhật)
-            onSurrender={handleSurrender} // (Đã cập nhật)
+            onFinish={handleFinishGame}
+            onSurrender={handleSurrender}
           />
         );
 
@@ -155,7 +170,7 @@ const App = () => {
           <MatchResult
             user={user}
             opponent={opponent}
-            resultData={lastMatchResult} // Dữ liệu kết quả từ game
+            resultData={lastMatchResult}
             onReplay={() => setScreen("matchSetup")}
             onGoToLobby={() => setScreen("lobby")}
             onViewHistory={() => setScreen("history")}
@@ -165,7 +180,7 @@ const App = () => {
       case "history":
         return (
           <History
-            onMenuClick={() => setScreen("lobby")} 
+            onMenuClick={() => setScreen("lobby")}
             onBack={() => setScreen("lobby")}
           />
         );
@@ -175,7 +190,20 @@ const App = () => {
     }
   };
 
-  return <div className="App">{renderScreen()}</div>;
+  return (
+    <div className="App">
+      {renderScreen()}
+
+      {/* Avatar edit modal nằm ở root để overlay luôn hiển thị */}
+      <AvatarEditModal
+        isOpen={isAvatarModalOpen}
+        onClose={handleCloseAvatarModal}
+        onSave={handleSaveAvatar}
+        currentAvatar={user.avatar || localAvatarPreview || ""}
+      />
+    </div>
+  );
 };
 
 export default App;
+// ...existing code...

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, Swords, BarChart3 } from "lucide-react";
+import { LogOut, Swords, BarChart3, Pencil } from "lucide-react"; // <-- ĐÃ THÊM Pencil
 import "../style/Lobby.css";
 import userIcon from "../assets/img/user-icon.png";
-import MinhTam from "../assets/img/MinhTam.jpg";
-import ChallengeDialog from "./ChallengeDialog";
+import MinhTam from "../assets/img/MinhTam.jpg"; // <-- THÊM LẠI import
+import ChallengeDialog from "./ChallengeDialog"; // <-- THÊM LẠI import
 
 // --- Component SVG Avatar (Không thay đổi) ---
 const DefaultAvatar = () => (
@@ -23,7 +23,7 @@ const DefaultAvatar = () => (
 );
 
 // --- Dữ liệu giả lập (Không thay đổi) ---
-const mockPlayers = [
+const mockPlayers = [ // <-- THÊM LẠI mockPlayers
   { id: 1, name: "sói hoang", status: "online", avatar: null },
   { id: 2, name: "sickmyduck", status: "online", avatar: null },
   { id: 3, name: "Vinh Phú", status: "busy", avatar: userIcon },
@@ -33,15 +33,15 @@ const mockPlayers = [
 
 // --- Component chính của Màn hình Sảnh ---
 const Lobby = ({
-  username = "VinhPlus",
+  user, // <-- THAY ĐỔI: Nhận toàn bộ object user
   onLogout,
   onAcceptChallenge,
   onViewHistory,
+  onEditAvatar, // <-- THÊM MỚI
 }) => {
   const [players] = useState(mockPlayers);
 
   // CẢI TIẾN 1: Dùng một state duy nhất để quản lý lời mời thách đấu
-  // Nếu `challenger` là một object, dialog sẽ hiện. Nếu là `null`, dialog sẽ ẩn.
   const [challenger, setChallenger] = useState(null);
 
   // CẢI TIẾN 2: Hàm chấp nhận thách đấu sẽ gọi prop từ App.jsx
@@ -70,21 +70,21 @@ const Lobby = ({
     return () => clearTimeout(timer);
   }, [players]); // Thêm players vào dependency array
 
-  return (
+  return ( // <-- THÊM LẠI return
     <div className="lobby-screen">
       {/* CẢI TIẾN 4: Truyền props dưới dạng object cho ChallengeDialog */}
       <ChallengeDialog
         challenger={challenger} // Truyền cả object người thách đấu
-        currentUser={{ name: username, avatar: userIcon }} // Tạo object người dùng hiện tại
+        currentUser={{ name: user.name, avatar: user.avatar || userIcon }} // <-- CẬP NHẬT
         onAccept={handleAccept}
         onDecline={handleDecline}
         duration={20} // Có thể tùy chỉnh thời gian
-      />
+      /> 
 
       <div className="lobby-container">
         {/* Header */}
         <header className="lobby-header">
-          <h1 className="welcome-text">Xin chào, {username}</h1>
+          <h1 className="welcome-text">Xin chào, {user.name}</h1> {/* <-- CẬP NHẬT */}
           <button className="logout-button" onClick={onLogout}>
             <LogOut size={20} />
             <span>Đăng xuất</span>
@@ -118,7 +118,7 @@ const Lobby = ({
                   <button
                     className="challenge-button"
                     disabled={
-                      player.status === "busy" || player.name === username
+                      player.status === "busy" || player.name === user.name // <-- CẬP NHẬT
                     }
                     onClick={() => alert(`Bạn đã thách đấu ${player.name}!`)}
                   >
@@ -145,10 +145,18 @@ const Lobby = ({
 
             <div className="avatar-section">
               <div className="avatar-container">
-                <img src={userIcon} alt="User Avatar" className="user-avatar" />
+                <img 
+                  src={user.avatar || userIcon} // <-- CẬP NHẬT: Dùng avatar từ state
+                  alt="User Avatar" 
+                  className="user-avatar" 
+                />
+                {/* THÊM MỚI: Nút chỉnh sửa */}
+                <button className="edit-avatar-button" onClick={onEditAvatar}>
+                  <Pencil size={16} />
+                </button>
               </div>
               <div className="avatar-info">
-                <h4 className="avatar-name">{username}</h4>
+                <h4 className="avatar-name">{user.name}</h4> {/* <-- CẬP NHẬT */}
                 <p className="avatar-status">Đang online</p>
               </div>
             </div>
