@@ -115,7 +115,7 @@ class MatchHistory(Base):
 
 # --------------------- CREATE TABLES ---------------------
 Base.metadata.create_all(bind=engine)
-print("✅ All tables created successfully!")
+print("All tables created successfully!")
 
 # --------------------- TEST INSERT DATA ---------------------
 
@@ -130,7 +130,7 @@ def test_full_flow():
         db.query(SudokuBoard).delete(synchronize_session=False)
         db.query(User).delete(synchronize_session=False)
         db.commit()
-        print("✅ Existing data cleared!")
+        print("Existing data cleared!")
 
         # --- Thêm user ---
         user1 = User(username="tiennguyen1231232", password_hash="123456")
@@ -140,7 +140,7 @@ def test_full_flow():
         db.refresh(user1)
         db.refresh(user2)
         print(
-            f"✅ Users added: {user1.username} ({user1.id}), {user2.username} ({user2.id})"
+            f"Users added: {user1.username} ({user1.id}), {user2.username} ({user2.id})"
         )
 
         # --- Thêm sudoku board ---
@@ -150,14 +150,14 @@ def test_full_flow():
         db.add(board)
         db.commit()
         db.refresh(board)
-        print(f"✅ SudokuBoard added: {board.name} ({board.id})")
+        print(f"SudokuBoard added: {board.name} ({board.id})")
 
         # --- Tạo match ---
         match = Match(board_id=board.id)
         db.add(match)
         db.commit()
         db.refresh(match)
-        print(f"✅ Match created: id={match.id}, board_id={match.board_id}")
+        print(f"Match created: id={match.id}, board_id={match.board_id}")
 
         # --- Thêm match players ---
         mp1 = MatchPlayer(match_id=match.id,
@@ -166,18 +166,18 @@ def test_full_flow():
                           user_id=user2.id, time_spent_sec=250)
         db.add_all([mp1, mp2])
         db.commit()
-        print(f"✅ MatchPlayers added: {mp1.user_id}, {mp2.user_id}")
+        print(f"MatchPlayers added: {mp1.user_id}, {mp2.user_id}")
 
         # --- Thêm match history ---
         mh1 = MatchHistory(match_id=match.id, user_id=user1.id, status="win")
         mh2 = MatchHistory(match_id=match.id, user_id=user2.id, status="lose")
         db.add_all([mh1, mh2])
         db.commit()
-        print(f"✅ MatchHistories added for users {user1.id}, {user2.id}")
+        print(f"MatchHistories added for users {user1.id}, {user2.id}")
 
     except Exception as e:
         db.rollback()
-        print("❌ Error:", e)
+        print("Error:", e)
     finally:
         db.close()
 

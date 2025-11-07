@@ -124,14 +124,78 @@ print("✅ All tables created successfully!")
 def test_insert_user():
     db = SessionLocal()
     try:
-        new_user = User(username="tiennguyen", password_hash="123456")
-        db.add(new_user)
+        new_users = [
+            User(username="tiennguyen", password_hash="123456"),
+            User(username="thanhnguyen", password_hash="234567"),
+            User(username="tamdao", password_hash="345678"),
+            User(username="phutrong", password_hash="456789"),
+            User(username="tritrung", password_hash="987654"),
+            User(username="haonguyen", password_hash="876543"),
+            User(username="quoctuan", password_hash="765432"),
+        ]
+        # Insert users
+        db.add_all(new_users)
         db.commit()
-        db.refresh(new_user)
-        print(f"✅ Added user: id={new_user.id}, username={new_user.username}")
+        for u in new_users:
+            db.refresh(u)
+        print(f"Added {len(new_users)} users")
+
+        # --------------------- Create sample sudoku boards ---------------------
+        boards = [
+            SudokuBoard(name="Easy Board 1", initial_matrix='0'*81),
+            SudokuBoard(name="Medium Board 1", initial_matrix='.'*81),
+            SudokuBoard(name="Hard Board 1", initial_matrix='1'*81),
+        ]
+        db.add_all(boards)
+        db.commit()
+        for b in boards:
+            db.refresh(b)
+        print(f"Added {len(boards)} sudoku boards")
+
+        # --------------------- Create sample matches ---------------------
+        # Pair first few users into matches
+        matches = [
+            Match(board_id=boards[0].id, winner_id=new_users[0].id,
+                  loser_id=new_users[1].id, win_reason="finished"),
+            Match(board_id=boards[1].id, winner_id=new_users[2].id,
+                  loser_id=new_users[3].id, win_reason="timeout"),
+            Match(board_id=boards[2].id, winner_id=new_users[4].id,
+                  loser_id=new_users[5].id, win_reason="forfeit"),
+        ]
+        db.add_all(matches)
+        db.commit()
+        for m in matches:
+            db.refresh(m)
+        print(f"Added {len(matches)} matches")
+
+        # --------------------- Create sample match players ---------------------
+        players = []
+        for m in matches:
+            if m.winner_id:
+                players.append(MatchPlayer(
+                    match_id=m.id, user_id=m.winner_id, time_spent_sec=300))
+            if m.loser_id:
+                players.append(MatchPlayer(
+                    match_id=m.id, user_id=m.loser_id, time_spent_sec=450))
+        db.add_all(players)
+        db.commit()
+        print(f"Added {len(players)} match players")
+
+        # --------------------- Create sample match histories ---------------------
+        histories = []
+        for m in matches:
+            if m.winner_id:
+                histories.append(MatchHistory(
+                    match_id=m.id, user_id=m.winner_id, status="win"))
+            if m.loser_id:
+                histories.append(MatchHistory(
+                    match_id=m.id, user_id=m.loser_id, status="lose"))
+        db.add_all(histories)
+        db.commit()
+        print(f"Added {len(histories)} match histories")
     except Exception as e:
         db.rollback()
-        print("❌ Error inserting user:", e)
+        print("Error inserting user:", e)
     finally:
         db.close()
 
