@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
+from src.sockets.socket_server import router as websocket_router
+
 
 # BƯỚC 1: Import Middleware CORS
 from fastapi.middleware.cors import CORSMiddleware
-
+app.include_router(websocket_router, tags=["WebSocket"])
 app = FastAPI()
 
 # BƯỚC 2: Thêm thiết lập CORS
