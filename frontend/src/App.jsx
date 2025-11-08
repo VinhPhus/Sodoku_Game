@@ -1,56 +1,80 @@
-// src/App.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { SocketProvider, useSocket } from "./context/SocketContext";
 import "./style/index.css";
+
 import AuthWrapper from "./components/AuthWrapper";
 import Lobby from "./components/Lobby";
 import MatchSetup from "./components/MatchSetup";
 import Maingame from "./components/Maingame";
 import MatchResult from "./components/MatchResult";
 import History from "./components/History";
-import { SocketProvider } from "./context/SocketContext";
 
-// Dữ liệu giả lập khi chưa có người
-const mockInitialUser = { name: "GUEST", id: `u-${Date.now()}` };
-const mockInitialOpponent = { name: "AI Opponent", id: "a1" };
+const AppContent = () => {
+  const { socket } = useSocket();
 
-const App = () => {
-  const [screen, setScreen] = useState("login");
+  const [user, setUser] = useState(null); // null trước login
+  const [opponent, setOpponent] = useState(null);
 
-  const [user, setUser] = useState(mockInitialUser);
-  const [opponent, setOpponent] = useState(mockInitialOpponent);
+  const [screen, setScreen] = useState("login"); // login | lobby | matchSetup | game | matchResult | history
   const [lastMatchResult, setLastMatchResult] = useState(null);
 
-  // Khi đăng nhập thành công
+  const [challenger, setChallenger] = useState(null);
+  const [onlinePlayers, setOnlinePlayers] = useState([{ id: 0, username: "Loading...", status: "online" }]);
+
+  // --- Khi login thành công ---
   const handleAuthSuccess = (username) => {
-    setUser({ ...user, name: username });
+    // Tạo id cố định (trùng với server nếu muốn)
+    const newUser = { id: Math.floor(Math.random() * 10000), username };
+    setUser(newUser);
     setScreen("lobby");
+
+    if (socket) socket.emit("login", newUser);
   };
 
-  // Khi chấp nhận thách đấu từ Lobby
-  const handleAcceptChallenge = (challenger) => {
-    setOpponent(challenger);
+  // --- Socket listeners ---
+  useEffect(() => {
+  if (!socket || !user) return;
+
+  socket.on("onlinePlayers", (players) => {
+    setOnlinePlayers(players.filter((p) => p.id !== user.id));
+  });
+
+  socket.on("challengeReceived", ({ challenger }) => {
+    setChallenger(challenger);
+  });
+
+  socket.on("challengeResponse", (data) => {
+    if (data.accepted) {
+      setOpponent(data.opponent || data.challenger);
+      setScreen("matchSetup");
+    } else {
+      alert("Lời mời bị từ chối");
+    }
+    setChallenger(null);
+  });
+
+  return () => {
+    socket.off("onlinePlayers");
+    socket.off("challengeReceived");
+    socket.off("challengeResponse");
+  };
+}, [socket, user]);
+
+  // --- Lobby Actions ---
+  const handleAcceptChallenge = (challengerData) => {
+    setOpponent(challengerData);
     setScreen("matchSetup");
   };
 
-  // Khi MatchSetup đếm ngược xong
+  // --- Match Setup / Start Game ---
   const handleStartGame = () => setScreen("game");
 
-  // Khi game kết thúc
+  // --- Game Finish ---
   const handleFinishGame = (finalBoard, errors) => {
     const result = {
       isUserWinner: true,
-      user: {
-        name: user.name,
-        timeCompleted: "02:10",
-        errors: errors,
-        isWinner: true,
-      },
-      opponent: {
-        name: opponent.name,
-        timeCompleted: "03:00",
-        errors: 1,
-        isWinner: false,
-      },
+      user: { name: user.username, timeCompleted: "02:10", errors, isWinner: true },
+      opponent: { name: opponent?.username || "AI Opponent", timeCompleted: "03:00", errors: 1, isWinner: false },
     };
     setLastMatchResult(result);
     setScreen("matchResult");
@@ -59,56 +83,43 @@ const App = () => {
   const handleSurrender = (errors) => {
     const result = {
       isUserWinner: false,
-      user: {
-        name: user.name,
-        timeCompleted: "Đầu hàng",
-        errors: errors,
-        isWinner: false,
-      },
-      opponent: {
-        name: opponent.name,
-        timeCompleted: "01:50",
-        errors: 0,
-        isWinner: true,
-      },
+      user: { name: user.username, timeCompleted: "Đầu hàng", errors, isWinner: false },
+      opponent: { name: opponent?.username || "AI Opponent", timeCompleted: "01:50", errors: 0, isWinner: true },
     };
     setLastMatchResult(result);
     setScreen("matchResult");
   };
 
+  // --- Render screen ---
   const renderScreen = () => {
     switch (screen) {
       case "login":
         return <AuthWrapper onAuthSuccess={handleAuthSuccess} />;
 
       case "lobby":
+        if (!user) return <div>Loading user...</div>;
         return (
           <Lobby
             user={user}
+            challenger={challenger}
+            setChallenger={setChallenger}
+            onlinePlayers={onlinePlayers}
             onAcceptChallenge={handleAcceptChallenge}
             onViewHistory={() => setScreen("history")}
             onLogout={() => setScreen("login")}
+            socket={socket}
           />
         );
 
       case "matchSetup":
-        return (
-          <MatchSetup
-            user={user}
-            opponent={opponent}
-            onStartGame={handleStartGame}
-          />
-        );
+        return user && opponent ? (
+        <MatchSetup user={user} opponent={opponent} onStartGame={handleStartGame} />
+      ) : (
+        <div>Loading...</div>   
+      );
 
       case "game":
-        return (
-          <Maingame
-            user={user}
-            opponent={opponent}
-            onFinish={handleFinishGame}
-            onSurrender={handleSurrender}
-          />
-        );
+        return <Maingame user={user} opponent={opponent} onFinish={handleFinishGame} onSurrender={handleSurrender} />;
 
       case "matchResult":
         return (
@@ -130,11 +141,13 @@ const App = () => {
     }
   };
 
-  return (
-    <SocketProvider>
-      <div className="App">{renderScreen()}</div>
-    </SocketProvider>
-  );
+  return <div className="App">{renderScreen()}</div>;
 };
 
-export default App;
+export default function App() {
+  return (
+    <SocketProvider>
+      <AppContent />
+    </SocketProvider>
+  );
+}

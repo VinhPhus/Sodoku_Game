@@ -4,57 +4,76 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }, // frontend connect từ localhost:5173
-});
+const io = new Server(server, { cors: { origin: "*" } });
 
-let onlinePlayers = []; // danh sách user online
+// Lưu danh sách online
+const onlineUsers = [];
 
 io.on("connection", (socket) => {
-  console.log("New client connected:", socket.id);
-
-  // Khi user login
+  console.log("Client connected:", socket.id);
   socket.on("login", (user) => {
-    socket.user = user;
-    onlinePlayers.push({ ...user, socketId: socket.id });
-    io.emit("onlinePlayers", onlinePlayers);
+    onlineUsers.push({ ...user, id: user.id });
+    io.emit("onlinePlayers", onlineUsers.filter(u => u.id !== user.id));
   });
 
-  // Khi gửi challenge
-  socket.on("sendChallenge", ({ opponentId, challengerId }) => {
-    const opponent = onlinePlayers.find((p) => p.id === opponentId);
-    const challenger = onlinePlayers.find((p) => p.id === challengerId);
-    if (opponent && challenger) {
-      io.to(opponent.socketId).emit("challengeReceived", { challenger });
-    }
-  });
-
-  // Khi accept challenge
-  socket.on("acceptChallenge", ({ challengerId }) => {
-    const challenger = onlinePlayers.find((p) => p.id === challengerId);
-    if (challenger) {
-      io.to(challenger.socketId).emit("challengeResponse", {
-        accepted: true,
-        matchId: Date.now(),
-      });
-    }
-  });
-
-  // Khi decline challenge
-  socket.on("declineChallenge", ({ challengerId }) => {
-    const challenger = onlinePlayers.find((p) => p.id === challengerId);
-    if (challenger) {
-      io.to(challenger.socketId).emit("challengeResponse", {
-        accepted: false,
-      });
-    }
-  });
-
-  // Khi disconnect
   socket.on("disconnect", () => {
-    onlinePlayers = onlinePlayers.filter((p) => p.socketId !== socket.id);
-    io.emit("onlinePlayers", onlinePlayers);
+    const index = onlineUsers.findIndex(u => u.id === socket.id);
+    if (index !== -1) onlineUsers.splice(index, 1);
+    io.emit("onlinePlayers", onlineUsers);
   });
 });
+
+  // --- Khi gửi challenge ---
+  socket.on("sendChallenge", ({ opponentId, challengerId }) => {
+    const opponentSocket = Array.from(io.sockets.sockets.values()).find(
+      (s) => s.user?.id === opponentId
+    );
+    if (opponentSocket) {
+      // gửi tới đối thủ
+      opponentSocket.emit("challengeReceived", { challenger: socket.user });
+    }
+  });
+
+  // --- Khi chấp nhận challenge ---
+  socket.on("acceptChallenge", ({ challengerId }) => {
+    const challengerSocket = Array.from(io.sockets.sockets.values()).find(
+      (s) => s.user?.id === challengerId
+    );
+    if (challengerSocket) {
+      // Gửi phản hồi cho cả 2
+      challengerSocket.emit("challengeResponse", {
+        accepted: true,
+        matchId: Math.floor(Math.random() * 100000),
+        challenger: challengerSocket.user,
+        opponent: socket.user,
+      });
+      socket.emit("challengeResponse", {
+        accepted: true,
+        matchId: Math.floor(Math.random() * 100000),
+        challenger: challengerSocket.user,
+        opponent: socket.user,
+      });
+    }
+  });
+
+  // --- Khi từ chối challenge ---
+  socket.on("declineChallenge", ({ challengerId }) => {
+    const challengerSocket = Array.from(io.sockets.sockets.values()).find(
+      (s) => s.user?.id === challengerId
+    );
+    if (challengerSocket) {
+      challengerSocket.emit("challengeResponse", { accepted: false });
+      socket.emit("challengeResponse", { accepted: false });
+    }
+  });
+
+  // --- Khi disconnect ---
+  socket.on("disconnect", () => {
+    if (socket.user) {
+      onlineUsers = onlineUsers.filter((u) => u.id !== socket.user.id);
+      io.emit("onlinePlayers", onlineUsers);
+      console.log(`${socket.user.username} disconnected`);
+    }
+  });
 
 server.listen(3000, () => console.log("Server running on port 3000"));
