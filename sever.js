@@ -7,21 +7,20 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // Lưu danh sách online
-const onlineUsers = [];
+let onlineUsers = [];
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
-  socket.on("login", (user) => {
-    onlineUsers.push({ ...user, id: user.id });
-    io.emit("onlinePlayers", onlineUsers.filter(u => u.id !== user.id));
-  });
 
-  socket.on("disconnect", () => {
-    const index = onlineUsers.findIndex(u => u.id === socket.id);
-    if (index !== -1) onlineUsers.splice(index, 1);
+  // --- Khi user login ---
+  socket.on("login", (user) => {
+    console.log(`${user.username} logged in`);
+    socket.user = user;
+    onlineUsers.push(user);
+
+    // Gửi danh sách online cho tất cả
     io.emit("onlinePlayers", onlineUsers);
   });
-});
 
   // --- Khi gửi challenge ---
   socket.on("sendChallenge", ({ opponentId, challengerId }) => {
@@ -75,5 +74,6 @@ io.on("connection", (socket) => {
       console.log(`${socket.user.username} disconnected`);
     }
   });
+});
 
 server.listen(3000, () => console.log("Server running on port 3000"));

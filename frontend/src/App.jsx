@@ -19,7 +19,7 @@ const AppContent = () => {
   const [lastMatchResult, setLastMatchResult] = useState(null);
 
   const [challenger, setChallenger] = useState(null);
-  const [onlinePlayers, setOnlinePlayers] = useState([{ id: 0, username: "Loading...", status: "online" }]);
+  const [onlinePlayers, setOnlinePlayers] = useState([]);
 
   // --- Khi login thành công ---
   const handleAuthSuccess = (username) => {
@@ -33,32 +33,40 @@ const AppContent = () => {
 
   // --- Socket listeners ---
   useEffect(() => {
-  if (!socket || !user) return;
+    if (!socket || !user) return;
 
-  socket.on("onlinePlayers", (players) => {
-    setOnlinePlayers(players.filter((p) => p.id !== user.id));
-  });
+    // Cập nhật danh sách online
+    socket.on("onlinePlayers", (players) => {
+      const filtered = players.filter((p) => p.id !== user.id);
+      setOnlinePlayers(filtered);
+    });
 
-  socket.on("challengeReceived", ({ challenger }) => {
-    setChallenger(challenger);
-  });
+    // Khi có challenge tới
+    socket.on("challengeReceived", ({ challenger }) => {
+      setChallenger(challenger);
+    });
 
-  socket.on("challengeResponse", (data) => {
-    if (data.accepted) {
-      setOpponent(data.opponent || data.challenger);
-      setScreen("matchSetup");
-    } else {
-      alert("Lời mời bị từ chối");
-    }
-    setChallenger(null);
-  });
+    // Khi có phản hồi challenge
+    socket.on("challengeResponse", (data) => {
+      console.log("challengeResponse", data); // debug
+      if (data.accepted && data.matchId && data.challenger) {
+        const challengerData = {
+          id: data.challenger.id,
+          username: data.challenger.username || data.challenger.name,
+          avatar: data.challenger.avatar || null
+        };
+        setOpponent(challengerData);
+        setScreen("matchSetup");
+      }
+      setChallenger(null);
+    });
 
-  return () => {
-    socket.off("onlinePlayers");
-    socket.off("challengeReceived");
-    socket.off("challengeResponse");
-  };
-}, [socket, user]);
+    return () => {
+      socket.off("onlinePlayers");
+      socket.off("challengeReceived");
+      socket.off("challengeResponse");
+    };
+  }, [socket, user]);
 
   // --- Lobby Actions ---
   const handleAcceptChallenge = (challengerData) => {
@@ -67,7 +75,8 @@ const AppContent = () => {
   };
 
   // --- Match Setup / Start Game ---
-  const handleStartGame = () => setScreen("game");
+  const handleStartGame = () => 
+    setScreen("game");
 
   // --- Game Finish ---
   const handleFinishGame = (finalBoard, errors) => {
@@ -97,7 +106,6 @@ const AppContent = () => {
         return <AuthWrapper onAuthSuccess={handleAuthSuccess} />;
 
       case "lobby":
-        if (!user) return <div>Loading user...</div>;
         return (
           <Lobby
             user={user}
@@ -112,11 +120,14 @@ const AppContent = () => {
         );
 
       case "matchSetup":
-        return user && opponent ? (
-        <MatchSetup user={user} opponent={opponent} onStartGame={handleStartGame} />
-      ) : (
-        <div>Loading...</div>   
-      );
+        return (
+        <MatchSetup 
+        user={user}
+        opponent={opponent}
+        matchId={opponent?.matchId || null} // nếu cần matchId
+        onStartGame={handleStartGame}
+        />
+        );
 
       case "game":
         return <Maingame user={user} opponent={opponent} onFinish={handleFinishGame} onSurrender={handleSurrender} />;
