@@ -1,14 +1,16 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
+from src.sockets.socket_server import router as websocket_router
+
 
 # BƯỚC 1: Import Middleware CORS
 from fastapi.middleware.cors import CORSMiddleware
-
+app.include_router(websocket_router, tags=["WebSocket"])
 app = FastAPI()
 
 # BƯỚC 2: Thêm thiết lập CORS
-# (Hãy chắc chắn địa chỉ localhost của React là đúng, 
+# (Hãy chắc chắn địa chỉ localhost của React là đúng,
 #  5173 là địa chỉ mặc định của Vite, 3000 là của Create-React-App)
 origins = [
     "http://localhost:5173",
@@ -17,6 +19,8 @@ origins = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://192.168.1.158:8000",
+    "http://192.168.1.158:5174",
 ]
 
 app.add_middleware(
@@ -37,10 +41,13 @@ class SudokuMoveRequest(BaseModel):
     col: int
     value: int
 
+
 class ValidationResponse(BaseModel):
     isValid: bool
 
 # --- 2. Hàm Logic Kiểm tra Sudoku ---
+
+
 def is_move_valid(board: List[List[int]], row: int, col: int, value: int) -> bool:
     """
     Kiểm tra xem một nước đi có hợp lệ hay không.
@@ -68,17 +75,20 @@ def is_move_valid(board: List[List[int]], row: int, col: int, value: int) -> boo
     return True
 
 # --- 3. Định nghĩa API Endpoint ---
+
+
 @app.post("/validate", response_model=ValidationResponse)
 async def validate_sudoku_move(request: SudokuMoveRequest):
     """
     Endpoint nhận nước đi từ frontend, kiểm tra tính hợp lệ
     và trả về kết quả.
     """
-    
+
     # Frontend đã gửi board *bao gồm* nước đi mới,
     # nên chúng ta có thể kiểm tra trực tiếp
     board_copy = [row[:] for row in request.board]
 
-    is_valid = is_move_valid(board_copy, request.row, request.col, request.value)
-    
+    is_valid = is_move_valid(board_copy, request.row,
+                             request.col, request.value)
+
     return ValidationResponse(isValid=is_valid)

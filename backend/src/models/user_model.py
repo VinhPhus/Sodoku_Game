@@ -15,3 +15,4 @@ class User(Base):
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email}, is_active={self.is_active})>"
+model_config = {"from_attributes": True}

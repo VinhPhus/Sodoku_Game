@@ -133,7 +133,7 @@ def test_full_flow():
         print("Existing data cleared!")
 
         # --- Thêm user ---
-        user1 = User(username="tiennguyen1231232", password_hash="123456")
+        user1 = User(username="tiennguyen16rhghgchgc2", password_hash="123456")
         user2 = User(username="player2", password_hash="abcdef")
         db.add_all([user1, user2])
         db.commit()

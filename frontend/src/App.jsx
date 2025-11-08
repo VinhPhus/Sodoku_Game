@@ -1,69 +1,42 @@
+// src/App.jsx
 import React, { useState } from "react";
-import "./style/index.css"; // File CSS toàn cục
-// Import tất cả các components cần thiết
-import AuthWrapper from "./components/AuthWrapper"; // Mới: Quản lý Login/Register
+import "./style/index.css";
+import AuthWrapper from "./components/AuthWrapper";
 import Lobby from "./components/Lobby";
 import MatchSetup from "./components/MatchSetup";
 import Maingame from "./components/Maingame";
-import MatchResult from "./components/MatchResult"; // Mới
-import History from "./components/History"; // Mới
+import MatchResult from "./components/MatchResult";
+import History from "./components/History";
+import { SocketProvider } from "./context/SocketContext";
 
-// Dữ liệu giả lập về trận đấu
-const mockInitialUser = { name: "GUEST", id: "u1" };
+// Dữ liệu giả lập khi chưa có người
+const mockInitialUser = { name: "GUEST", id: `u-${Date.now()}` };
 const mockInitialOpponent = { name: "AI Opponent", id: "a1" };
 
 const App = () => {
-  // State quản lý màn hình hiện tại:
-  // 'login' | 'lobby' | 'matchSetup' | 'game' | 'matchResult' | 'history'
   const [screen, setScreen] = useState("login");
 
-  // State lưu trữ thông tin người chơi
   const [user, setUser] = useState(mockInitialUser);
   const [opponent, setOpponent] = useState(mockInitialOpponent);
-
-  // State lưu trữ kết quả trận đấu để truyền vào MatchResult
   const [lastMatchResult, setLastMatchResult] = useState(null);
 
-  // ===============================================
-  // --- 1. Xử lý Luồng Xác thực (LOGIN/REGISTER) ---
-  // ===============================================
-
-  // Hàm được gọi khi Đăng nhập/Đăng ký thành công
+  // Khi đăng nhập thành công
   const handleAuthSuccess = (username) => {
-    // Cập nhật tên người dùng và chuyển sang Lobby
     setUser({ ...user, name: username });
     setScreen("lobby");
   };
 
-  // ===============================================
-  // --- 2. Xử lý Luồng Thách đấu (LOBBY) ---
-  // ===============================================
-
-  // Hàm được gọi khi chấp nhận lời mời (từ Lobby)
+  // Khi chấp nhận thách đấu từ Lobby
   const handleAcceptChallenge = (challenger) => {
     setOpponent(challenger);
     setScreen("matchSetup");
   };
 
-  // ===============================================
-  // --- 3. Xử lý Luồng Bắt đầu Game (MATCH SETUP) ---
-  // ===============================================
+  // Khi MatchSetup đếm ngược xong
+  const handleStartGame = () => setScreen("game");
 
-  // Hàm được gọi khi MatchSetup đếm ngược xong
-  const handleStartGame = () => {
-    setScreen("game");
-  };
-
-  // ===============================================
-  // --- 4. Xử lý Luồng Kết thúc Game (MAINGAME) ---
-  // ===============================================
-
-  /**
-   * Hàm xử lý khi người dùng nhấn HOÀN THÀNH (Dự kiến THẮNG)
-   * @param {Array} finalBoard - Trạng thái cuối cùng của bàn cờ (nếu cần chấm điểm)
-   */
+  // Khi game kết thúc
   const handleFinishGame = (finalBoard, errors) => {
-    // Giả lập dữ liệu thắng cuộc
     const result = {
       isUserWinner: true,
       user: {
@@ -83,11 +56,7 @@ const App = () => {
     setScreen("matchResult");
   };
 
-  /**
-   * Hàm xử lý khi người dùng nhấn ĐẦU HÀNG (Dự kiến THUA)
-   */
   const handleSurrender = (errors) => {
-    // Giả lập dữ liệu thua cuộc
     const result = {
       isUserWinner: false,
       user: {
@@ -107,21 +76,17 @@ const App = () => {
     setScreen("matchResult");
   };
 
-  // ===============================================
-  // --- 5. Logic Hiển thị (RENDER) ---
-  // ===============================================
-
   const renderScreen = () => {
     switch (screen) {
       case "login":
-        return <AuthWrapper onAuthSuccess={handleAuthSuccess} />; // Dùng AuthWrapper mới
+        return <AuthWrapper onAuthSuccess={handleAuthSuccess} />;
 
       case "lobby":
         return (
           <Lobby
             user={user}
             onAcceptChallenge={handleAcceptChallenge}
-            onViewHistory={() => setScreen("history")} // Thêm luồng đến History
+            onViewHistory={() => setScreen("history")}
             onLogout={() => setScreen("login")}
           />
         );
@@ -140,8 +105,8 @@ const App = () => {
           <Maingame
             user={user}
             opponent={opponent}
-            onFinish={handleFinishGame} // Kết thúc (THẮNG)
-            onSurrender={handleSurrender} // Đầu hàng (THUA)
+            onFinish={handleFinishGame}
+            onSurrender={handleSurrender}
           />
         );
 
@@ -150,7 +115,7 @@ const App = () => {
           <MatchResult
             user={user}
             opponent={opponent}
-            resultData={lastMatchResult} // Dữ liệu kết quả từ game
+            resultData={lastMatchResult}
             onReplay={() => setScreen("matchSetup")}
             onGoToLobby={() => setScreen("lobby")}
             onViewHistory={() => setScreen("history")}
@@ -158,19 +123,18 @@ const App = () => {
         );
 
       case "history":
-        return (
-          <History
-            onMenuClick={() => setScreen("lobby")} // Quay lại Lobby
-            onBack={() => setScreen("lobby")} // Quay lại Lobby qua nút "Quay lại"
-          />
-        );
+        return <History onMenuClick={() => setScreen("lobby")} onBack={() => setScreen("lobby")} />;
 
       default:
         return <div>404 | Screen Not Found</div>;
     }
   };
 
-  return <div className="App">{renderScreen()}</div>;
+  return (
+    <SocketProvider>
+      <div className="App">{renderScreen()}</div>
+    </SocketProvider>
+  );
 };
 
 export default App;
