@@ -423,6 +423,12 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
     const handleHint = () => {
         if (gameWon) return;
 
+        // Kiểm tra giới hạn số lần gợi ý
+        if (hintsUsed >= MAX_HINTS) {
+            alert(`⚠️ Bạn đã hết lượt gợi ý! (Tối đa ${MAX_HINTS} lần)`);
+            return;
+        }
+
         // Kiểm tra xem có ô sai không - phải sửa ô sai trước
         if (errorCells.size > 0) {
             alert("⚠️ Bạn phải sửa lại ô sai (khung đỏ) trước khi dùng gợi ý!");
@@ -628,9 +634,9 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
                             <button
                                 className="tool-button"
                                 onClick={handleHint}
-                                disabled={gameWon}
+                                disabled={gameWon || hintsUsed >= MAX_HINTS}
                             >
-                                💡 Gợi ý ({hintsUsed})
+                                💡 Gợi ý ({MAX_HINTS - hintsUsed}/{MAX_HINTS})
                             </button>
                             <button
                                 className="finish-button"

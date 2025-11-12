@@ -261,6 +261,18 @@
   border-color: var(--color-blue);
 }
 
+.tool-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #d3d3d3;
+  color: #888;
+  border-color: #bbb;
+}
+
+.tool-button:disabled:hover {
+  background-color: #d3d3d3;
+}
+
 .finish-button {
   background-color: var(--color-green);
   color: white;
