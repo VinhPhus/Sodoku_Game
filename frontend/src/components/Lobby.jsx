@@ -3,7 +3,7 @@ import { LogOut, Swords, BarChart3 } from "lucide-react";
 import "../style/Lobby.css";
 import userIcon from "../assets/img/user-icon.png";
 import ChallengeDialog from "./ChallengeDialog";
-
+import MatchSetup from "./MatchSetup";
 // --- Component SVG Avatar ---
 const DefaultAvatar = () => (
   <svg
@@ -23,7 +23,7 @@ const DefaultAvatar = () => (
 
 // --- Component chính ---
 const Lobby = ({
-  user = { id: 1, username: "VinhPlus", avatar: userIcon },
+  user,
   socket = null,
   onlinePlayers = [],
   challenger,
@@ -32,30 +32,25 @@ const Lobby = ({
   onViewHistory,
   onLogout,
 }) => {
-  // --- State cho offline simulation ---
-  const [players, setPlayers] = useState(onlinePlayers);
-  const [localChallenger, setLocalChallenger] = useState(null);
+  // Sử dụng onlinePlayers từ props (đã được xử lý ở App.jsx)
+  const players = onlinePlayers;
 
-  // Nếu không có socket (offline test), dùng mock
+  // Listen for socket events
   useEffect(() => {
-    if (!socket) {
-      const mockPlayers = [
-        { id: 2, username: "sói hoang", status: "online", avatar: null },
-        { id: 3, username: "sickmyduck", status: "online", avatar: null },
-        { id: 4, username: "Minh Tâm", status: "busy", avatar: null },
-      ];
-      setPlayers(mockPlayers);
+    if (!socket) return;
 
-      const timer = setTimeout(() => {
-        const challengerMock = mockPlayers[0];
-        setLocalChallenger(challengerMock);
-      }, 3000);
+    const handleChallengeReceived = (data) => {
+      console.log("Challenge received in Lobby:", data);
+      // data: { challenger }
+      if (setChallenger) setChallenger(data.challenger);
+    };
 
-      return () => clearTimeout(timer);
-    } else {
-      setPlayers(onlinePlayers);
-    }
-  }, [socket, onlinePlayers]);
+    socket.on("challengeReceived", handleChallengeReceived);
+
+    return () => {
+      socket.off("challengeReceived", handleChallengeReceived);
+    };
+  }, [socket, setChallenger]);
 
   // --- Gửi lời thách đấu ---
   const sendChallenge = (opponent) => {
@@ -71,35 +66,29 @@ const Lobby = ({
 
   // --- Chấp nhận thách đấu ---
   const acceptChallenge = () => {
-    const current = challenger || localChallenger;
+    const current = challenger;
     if (!current) return;
 
     if (socket) {
       socket.emit("acceptChallenge", { challengerId: current.id });
-    } else {
-      console.log(`(Offline) Chấp nhận thách đấu từ ${current.username}`);
     }
     if (setChallenger) setChallenger(null);
-    setLocalChallenger(null);
-    onAcceptChallenge(current);
+    if (onAcceptChallenge) onAcceptChallenge(current);
   };
 
   // --- Từ chối thách đấu ---
   const declineChallenge = () => {
-    const current = challenger || localChallenger;
+    const current = challenger;
     if (!current) return;
 
     if (socket) {
       socket.emit("declineChallenge", { challengerId: current.id });
-    } else {
-      console.log(`(Offline) Từ chối thách đấu từ ${current.username}`);
     }
     if (setChallenger) setChallenger(null);
-    setLocalChallenger(null);
   };
 
   // --- Chọn challenger đang hiển thị ---
-  const activeChallenger = challenger || localChallenger;
+  const activeChallenger = challenger;
 
   return (
     <div className="lobby-screen">
@@ -132,6 +121,11 @@ const Lobby = ({
               {socket ? `(${players.length})` : "(Giả lập)"}
             </h2>
             <div className="player-list">
+              {players.length === 0 && (
+                <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
+                  Chưa có người chơi nào online. Hãy mở một tab khác để test!
+                </div>
+              )}
               {players.map((p) => (
                 <div key={p.id} className="player-item">
                   <div className="player-info">
@@ -147,9 +141,8 @@ const Lobby = ({
                     <div className="player-details">
                       <span className="player-name">{p.username}</span>
                       <span
-                        className={`player-status status-${
-                          p.status || "online"
-                        }`}
+                        className={`player-status status-${p.status || "online"
+                          }`}
                       >
                         {p.status === "busy" ? "Đang bận" : "Online"}
                       </span>

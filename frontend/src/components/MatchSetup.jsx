@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSocket } from "../context/SocketContext";
 import "../style/Match_Setup.css";
 
 import avatarYou from "../assets/img/user-icon.png";
@@ -50,6 +51,7 @@ const ExitIcon = () => (
 
 // Single, merged component with onStartGame prop
 const MatchSetup = ({ user, opponent, onBack, onStartGame }) => {
+  const { socket } = useSocket();
   const [countdown, setCountdown] = useState(3);
   const [statusText, setStatusText] = useState("Đang tạo phòng đấu...");
 
@@ -61,13 +63,25 @@ const MatchSetup = ({ user, opponent, onBack, onStartGame }) => {
       return () => clearTimeout(timer);
     }
 
-    // countdown === 0: update status and notify parent once
+    // Khi đếm ngược kết thúc
     setStatusText("Bắt đầu!");
-    if (typeof onStartGame === "function") {
-      onStartGame();
+
+    // Gửi event startMatch lên server với matchId
+    if (socket && opponent?.matchId) {
+      console.log("Sending startMatch event with matchId:", opponent.matchId);
+      socket.emit("startMatch", { matchId: opponent.matchId });
     }
+
+    // Chờ một chút để hiển thị "Bắt đầu!" rồi chuyển màn hình
+    const timer = setTimeout(() => {
+      if (typeof onStartGame === "function") {
+        onStartGame();
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countdown, onStartGame]);
+  }, [countdown, onStartGame, socket, opponent]);
 
   return (
     <div className="match-setup-screen">
@@ -93,12 +107,12 @@ const MatchSetup = ({ user, opponent, onBack, onStartGame }) => {
           <div className="players-container">
             <div className="player-info-card">
               <img
-                src={user.avatar || avatarYou}
-                alt={user.name}
+                src={user?.avatar || avatarYou}
+                alt={user?.username || user?.name || "You"}
                 className="avatar"
               />
               <div className="player-details">
-                <span className="player-name">{user.name}</span>
+                <span className="player-name">{user?.username || user?.name || "You"}</span>
                 <span className="player-status">Online</span>
               </div>
             </div>
@@ -122,12 +136,14 @@ const MatchSetup = ({ user, opponent, onBack, onStartGame }) => {
 
             <div className="player-info-card">
               <img
-                src={opponent.avatar || avatarPlayerA}
-                alt={opponent.name}
+                src={opponent?.avatar || avatarPlayerA}
+                alt={opponent?.username || opponent?.name || "Opponent"}
                 className="avatar"
               />
               <div className="player-details">
-                <span className="player-name">{opponent.name}</span>
+                <span className="player-name">
+                  {opponent?.username || opponent?.name || "Opponent"}
+                </span>
                 <span className="player-status">Online</span>
               </div>
             </div>

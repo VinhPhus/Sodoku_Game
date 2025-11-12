@@ -23,12 +23,16 @@ const AppContent = () => {
 
   // --- Khi login thành công ---
   const handleAuthSuccess = (username) => {
-    // Tạo id cố định (trùng với server nếu muốn)
-    const newUser = { id: Math.floor(Math.random() * 10000), username };
+    // Tạo id duy nhất cho user
+    const userId = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const newUser = { id: userId, username };
     setUser(newUser);
     setScreen("lobby");
 
-    if (socket) socket.emit("login", newUser);
+    // Kết nối WebSocket với userId
+    if (socket) {
+      socket.connect(userId, username);
+    }
   };
 
   // --- Socket listeners ---
@@ -36,8 +40,11 @@ const AppContent = () => {
     if (!socket || !user) return;
 
     // Cập nhật danh sách online
-    socket.on("onlinePlayers", (players) => {
-      const filtered = players.filter((p) => p.id !== user.id);
+    socket.on("onlinePlayers", (data) => {
+      console.log("Received onlinePlayers:", data);
+      const playersList = data.players || data;
+      const filtered = playersList.filter((p) => p.id !== user.id);
+      console.log("Filtered players:", filtered);
       setOnlinePlayers(filtered);
     });
 
@@ -53,7 +60,8 @@ const AppContent = () => {
         const challengerData = {
           id: data.challenger.id,
           username: data.challenger.username || data.challenger.name,
-          avatar: data.challenger.avatar || null
+          avatar: data.challenger.avatar || null,
+          matchId: data.matchId  // Lưu matchId để sử dụng sau
         };
         setOpponent(challengerData);
         setScreen("matchSetup");
@@ -61,10 +69,35 @@ const AppContent = () => {
       setChallenger(null);
     });
 
+    // Khi trận đấu bắt đầu (cả 2 người chơi đều nhận được)
+    socket.on("matchStarted", (data) => {
+      console.log("matchStarted", data);
+      if (data.matchId) {
+        // Đảm bảo matchId được lưu vào opponent
+        setOpponent(prev => ({
+          ...prev,
+          matchId: data.matchId
+        }));
+        setScreen("game");
+      }
+    });
+
+    // Khi người chơi thoát khỏi trận
+    socket.on("playerLeft", (data) => {
+      console.log("playerLeft", data);
+      if (screen === "matchSetup" || screen === "game") {
+        alert("Đối thủ đã thoát khỏi trận đấu!");
+        setScreen("lobby");
+        setOpponent(null);
+      }
+    });
+
     return () => {
       socket.off("onlinePlayers");
       socket.off("challengeReceived");
       socket.off("challengeResponse");
+      socket.off("matchStarted");
+      socket.off("playerLeft");
     };
   }, [socket, user]);
 
@@ -75,25 +108,50 @@ const AppContent = () => {
   };
 
   // --- Match Setup / Start Game ---
-  const handleStartGame = () => 
+  const handleStartGame = () => {
+    console.log("Starting game with user:", user);
+    console.log("Starting game with opponent:", opponent);
     setScreen("game");
+  };
 
   // --- Game Finish ---
-  const handleFinishGame = (finalBoard, errors) => {
-    const result = {
-      isUserWinner: true,
-      user: { name: user.username, timeCompleted: "02:10", errors, isWinner: true },
-      opponent: { name: opponent?.username || "AI Opponent", timeCompleted: "03:00", errors: 1, isWinner: false },
-    };
+  const handleFinishGame = (matchResult) => {
+    // matchResult có thể là object kết quả hoặc là (board, errors) từ cách gọi cũ
+    let result;
+
+    if (matchResult && typeof matchResult === 'object' && matchResult.isUserWinner !== undefined) {
+      // Đã là object kết quả từ socket event
+      result = matchResult;
+    } else {
+      // Fallback cho trường hợp cũ (nếu có)
+      result = {
+        isUserWinner: true,
+        user: {
+          name: user.username,
+          timeCompleted: "N/A",
+          errors: typeof matchResult === 'number' ? matchResult : 0,
+          isWinner: true
+        },
+        opponent: {
+          name: opponent?.username || "Đối thủ",
+          timeCompleted: "N/A",
+          errors: 0,
+          isWinner: false
+        },
+      };
+    }
+
     setLastMatchResult(result);
     setScreen("matchResult");
   };
 
   const handleSurrender = (errors) => {
+    // Hàm này có thể không cần nữa vì surrender được xử lý qua socket
+    // Nhưng giữ lại để tương thích
     const result = {
       isUserWinner: false,
       user: { name: user.username, timeCompleted: "Đầu hàng", errors, isWinner: false },
-      opponent: { name: opponent?.username || "AI Opponent", timeCompleted: "01:50", errors: 0, isWinner: true },
+      opponent: { name: opponent?.username || "Đối thủ", timeCompleted: "N/A", errors: 0, isWinner: true },
     };
     setLastMatchResult(result);
     setScreen("matchResult");
@@ -121,16 +179,24 @@ const AppContent = () => {
 
       case "matchSetup":
         return (
-        <MatchSetup 
-        user={user}
-        opponent={opponent}
-        matchId={opponent?.matchId || null} // nếu cần matchId
-        onStartGame={handleStartGame}
-        />
+          <MatchSetup
+            user={user}
+            opponent={opponent}
+            matchId={opponent?.matchId || null} // nếu cần matchId
+            onStartGame={handleStartGame}
+          />
         );
 
       case "game":
-        return <Maingame user={user} opponent={opponent} onFinish={handleFinishGame} onSurrender={handleSurrender} />;
+        return (
+          <Maingame
+            user={user}
+            opponent={opponent}
+            matchId={opponent?.matchId}
+            onFinish={handleFinishGame}
+            onSurrender={handleSurrender}
+          />
+        );
 
       case "matchResult":
         return (
@@ -145,7 +211,13 @@ const AppContent = () => {
         );
 
       case "history":
-        return <History onMenuClick={() => setScreen("lobby")} onBack={() => setScreen("lobby")} />;
+        return (
+          <History
+            user={user}
+            onMenuClick={() => setScreen("lobby")}
+            onBack={() => setScreen("lobby")}
+          />
+        );
 
       default:
         return <div>404 | Screen Not Found</div>;

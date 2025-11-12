@@ -1,118 +1,616 @@
-{/* ... (header, grid, controls...) ... */ }
-// src/components/Maingame.jsx
 import React, { useState, useEffect } from "react";
-import { useSocket } from "../context/SocketContext"; // <-- 1. Import useSocket
+import { useSocket } from "../context/SocketContext";
 import "../style/Maingame.css";
-// ... (các import khác: SurrenderDialog, icons...)
 
-// (Giả sử initialBoard và solutionBoard được truyền từ props hoặc hardcode)
+// ===== SUDOKU LOGIC FUNCTIONS =====
 
-const Maingame = ({
-    user,
-    opponent,
-    matchId, // <-- 2. Nhận matchId từ props
-    onSurrender,
-    onFinish
-}) => {
+// Hàm kiểm tra số có hợp lệ tại vị trí (row, col)
+const isValidMove = (board, row, col, num) => {
+    // Kiểm tra hàng
+    for (let x = 0; x < 9; x++) {
+        if (x !== col && board[row][x] === num) {
+            return false;
+        }
+    }
 
-    const { socket } = useSocket(); // <-- 3. Lấy socket
+    // Kiểm tra cột
+    for (let x = 0; x < 9; x++) {
+        if (x !== row && board[x][col] === num) {
+            return false;
+        }
+    }
 
-    // ... (Tất cả state cũ của Maingame: board, selectedCell, errorCells, timeLeft...)
+    // Kiểm tra ô 3x3
+    const startRow = Math.floor(row / 3) * 3;
+    const startCol = Math.floor(col / 3) * 3;
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            const currentRow = startRow + i;
+            const currentCol = startCol + j;
+            if (currentRow !== row && currentCol !== col &&
+                board[currentRow][currentCol] === num) {
+                return false;
+            }
+        }
+    }
 
-    // THÊM STATE MỚI để theo dõi đối thủ
-    const [opponentErrorCount, setOpponentErrorCount] = useState(0);
+    return true;
+};
 
-    // 4. LẮNG NGHE SỰ KIỆN TỪ ĐỐI THỦ
-    useEffect(() => {
-        if (!socket) return;
-
-        // Lắng nghe khi đối thủ đi
-        // Tên 'opponentMove' phải khớp với backend
-        const onOpponentMove = (data) => {
-            // data = { row, col, value, newErrorCount }
-            console.log("Đối thủ đi:", data);
-
-            // Cập nhật số lỗi của đối thủ lên UI
-            setOpponentErrorCount(data.newErrorCount);
-
-            // TÙY CHỌN: Nếu bạn muốn cả 2 cùng giải 1 bảng,
-            // hãy cập nhật bảng của BẠN với nước đi của ĐỐI THỦ
-            // setBoard(prevBoard => {
-            //   const newBoard = prevBoard.map(r => [...r]);
-            //   newBoard[data.row][data.col] = data.value;
-            //   return newBoard;
-            // });
-        };
-
-        // (Bạn cũng có thể lắng nghe 'opponentChat' tại đây)
-
-        socket.on("opponentMove", onOpponentMove);
-
-        return () => {
-            socket.off("opponentMove", onOpponentMove);
-        };
-    }, [socket]);
-
-
-    // 5. GỬI NƯỚC ĐI KHI BẠN CHƠI
-    const handleNumberInput = async (number) => {
-        if (!selectedCell || !socket) return;
-
-        const { row, col } = selectedCell;
-        // ... (logic cũ: kiểm tra defaultCells...)
-
-        // (Logic validate của bạn...)
-        // Giả sử bạn đã gọi API /validate và có kết quả...
-        // const validationResult = await callValidateAPI(...);
-        // const newErrors = new Set(errorCells);
-        // if (!validationResult.isValid) {
-        //   newErrors.add(`${row}-${col}`);
-        // }
-
-        // --- BẮT ĐẦU GỬI WEBSOCKET ---
-
-        // Tên 'sendMove' phải khớp với backend
-        socket.emit("sendMove", {
-            matchId: matchId, // <-- Dùng matchId đã được truyền
-            row: row,
-            col: col,
-            value: number,
-            // Gửi kèm số lỗi MỚI của bạn để đối thủ cập nhật
-            newErrorCount: errorCells.size // (Hoặc newErrors.size nếu bạn dùng logic mới)
-        });
-
-        // --- KẾT THÚC GỬI WEBSOCKET ---
-
-        // ... (Cập nhật setBoard và xử lý 5 lỗi như cũ)
+// Hàm giải Sudoku (backtracking)
+const solveSudoku = (board) => {
+    const findEmpty = () => {
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (board[i][j] === 0) return [i, j];
+            }
+        }
+        return null;
     };
 
-    // (Các hàm khác: handleDelete, handleHint, handleSendChat, handleSurrenderClick...)
+    const empty = findEmpty();
+    if (!empty) return true; // Đã giải xong
 
-    // TRONG PHẦN RENDER JSX:
+    const [row, col] = empty;
+    for (let num = 1; num <= 9; num++) {
+        if (isValidMove(board, row, col, num)) {
+            board[row][col] = num;
+            if (solveSudoku(board)) return true;
+            board[row][col] = 0;
+        }
+    }
+
+    return false;
+};
+
+// Hàm tạo bàn Sudoku hoàn chỉnh
+const generateCompleteBoard = () => {
+    const board = Array(9).fill(null).map(() => Array(9).fill(0));
+
+    // Điền đường chéo chính (3 ô 3x3)
+    const fillDiagonal = () => {
+        for (let box = 0; box < 9; box += 3) {
+            const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            // Shuffle array
+            for (let i = nums.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [nums[i], nums[j]] = [nums[j], nums[i]];
+            }
+
+            let idx = 0;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    board[box + i][box + j] = nums[idx++];
+                }
+            }
+        }
+    };
+
+    fillDiagonal();
+    solveSudoku(board);
+    return board;
+};
+
+// Hàm tạo puzzle từ solution (xóa bớt số)
+const generatePuzzle = (solution, difficulty = 'medium') => {
+    const board = solution.map(row => [...row]);
+
+    // Số ô cần xóa theo độ khó
+    const cellsToRemove = {
+        easy: 30,
+        medium: 40,
+        hard: 50
+    }[difficulty] || 40;
+
+    let removed = 0;
+    while (removed < cellsToRemove) {
+        const row = Math.floor(Math.random() * 9);
+        const col = Math.floor(Math.random() * 9);
+
+        if (board[row][col] !== 0) {
+            board[row][col] = 0;
+            removed++;
+        }
+    }
+
+    return board;
+};
+
+// Hàm tạo bàn Sudoku (puzzle + solution)
+const generateSudokuGame = (difficulty = 'medium') => {
+    const solution = generateCompleteBoard();
+    const puzzle = generatePuzzle(solution, difficulty);
+    return { puzzle, solution };
+};
+
+const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
+    const { socket } = useSocket();
+    const [timer, setTimer] = useState(0);
+    const [errors, setErrors] = useState(0);
+    const [opponentErrors, setOpponentErrors] = useState(0);
+    const [opponentProgress, setOpponentProgress] = useState(0);
+
+    // Khởi tạo bàn chơi với solution
+    const [gameData] = useState(() => generateSudokuGame('medium'));
+    const [solution] = useState(gameData.solution);
+    const [board, setBoard] = useState(() => gameData.puzzle.map(row => [...row]));
+    const [selectedCell, setSelectedCell] = useState(null);
+    const [defaultCells] = useState(() => {
+        const cells = new Set();
+        gameData.puzzle.forEach((row, i) => {
+            row.forEach((cell, j) => {
+                if (cell !== 0) cells.add(`${i}-${j}`);
+            });
+        });
+        return cells;
+    });
+    const [errorCells, setErrorCells] = useState(new Set());
+    const [hintsUsed, setHintsUsed] = useState(0);
+    const [gameWon, setGameWon] = useState(false);
+
+    // Timer
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTimer(prev => prev + 1);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // Socket listeners
+    useEffect(() => {
+        if (!socket || !matchId) return;
+
+        // Lắng nghe tiến độ đối thủ
+        const handleOpponentProgress = (data) => {
+            console.log("Opponent progress:", data);
+            setOpponentErrors(data.errors || 0);
+            setOpponentProgress(data.progress || 0);
+        };
+
+        // Lắng nghe khi trận đấu kết thúc (hoàn thành hoặc đầu hàng)
+        const handleMatchFinished = (data) => {
+            console.log("Match finished:", data);
+            const result = data.result;
+            const isWinner = result.winner_id === user.id;
+
+            // Format thời gian
+            const formatCompletionTime = (timeValue) => {
+                // Nếu là số giây
+                if (typeof timeValue === 'number') {
+                    const mins = Math.floor(timeValue / 60);
+                    const secs = timeValue % 60;
+                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+                // Nếu đã là định dạng MM:SS
+                if (typeof timeValue === 'string' && timeValue.includes(':')) {
+                    return timeValue;
+                }
+                return timeValue;
+            };
+
+            const userTime = result.player1_id === user.id ? result.player1_time : result.player2_time;
+            const opponentTime = result.player1_id === user.id ? result.player2_time : result.player1_time;
+
+            // Tạo thông tin kết quả để hiển thị
+            const matchResult = {
+                isUserWinner: isWinner,
+                user: {
+                    name: user.username,
+                    timeCompleted: formatCompletionTime(userTime),
+                    errors: errors,
+                    isWinner: isWinner
+                },
+                opponent: {
+                    name: opponent?.username || 'Đối thủ',
+                    timeCompleted: formatCompletionTime(opponentTime),
+                    errors: opponentErrors,
+                    isWinner: !isWinner
+                }
+            };
+
+            // Hiển thị thông báo
+            if (isWinner) {
+                setTimeout(() => {
+                    alert("🎉 Bạn thắng! Đối thủ đã đầu hàng hoặc bạn hoàn thành trước!");
+                }, 300);
+            } else {
+                setTimeout(() => {
+                    alert("😔 Bạn thua! Đối thủ đã hoàn thành trước hoặc bạn đã đầu hàng!");
+                }, 300);
+            }
+
+            // Chuyển sang màn hình kết quả với data đầy đủ
+            setTimeout(() => {
+                onFinish(matchResult);
+            }, 1000);
+        };
+
+        socket.on("opponentProgress", handleOpponentProgress);
+        socket.on("matchFinished", handleMatchFinished);
+
+        return () => {
+            socket.off("opponentProgress", handleOpponentProgress);
+            socket.off("matchFinished", handleMatchFinished);
+        };
+    }, [socket, matchId, user, opponent, board, errors, opponentErrors, onFinish]);
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const handleCellClick = (row, col) => {
+        if (defaultCells.has(`${row}-${col}`)) return; // Không cho chọn ô mặc định
+        if (gameWon) return; // Không cho chơi nữa nếu đã thắng
+
+        // Kiểm tra xem có ô sai nào đang tồn tại không
+        if (errorCells.size > 0) {
+            // Chỉ cho phép chọn ô sai để sửa
+            const cellKey = `${row}-${col}`;
+            if (errorCells.has(cellKey)) {
+                setSelectedCell({ row, col });
+            } else {
+                // Thông báo phải sửa ô sai trước
+                alert("Xóa ô sai để tiếp tục!");
+            }
+            return;
+        }
+
+        setSelectedCell({ row, col });
+    };
+
+    const handleNumberInput = (number) => {
+        if (!selectedCell || gameWon) return;
+
+        const { row, col } = selectedCell;
+        const cellKey = `${row}-${col}`;
+
+        // Không cho sửa ô mặc định
+        if (defaultCells.has(cellKey)) return;
+
+        const newBoard = board.map(r => [...r]);
+        const oldValue = board[row][col];
+        newBoard[row][col] = number;
+
+        // Kiểm tra nước đi có hợp lệ không
+        const newErrorCells = new Set(errorCells);
+
+        if (number !== 0) {
+            // Kiểm tra với solution
+            if (solution[row][col] !== number) {
+                // Sai rồi! Giữ nguyên khung đỏ và không cho chơi tiếp
+                newErrorCells.add(cellKey);
+                setErrors(prev => prev + 1);
+
+                // Không cập nhật board nếu đang sai
+                setErrorCells(newErrorCells);
+                setBoard(newBoard); // Vẫn cập nhật board để hiện số sai
+
+                // Không cho chọn ô khác hoặc điền số khác cho đến khi sửa
+                return; // Dừng tại đây, không cho thực hiện nước đi tiếp
+            } else {
+                // Đúng! Xóa khỏi danh sách lỗi nếu có
+                newErrorCells.delete(cellKey);
+            }
+        } else {
+            // Xóa số - xóa khỏi danh sách lỗi
+            newErrorCells.delete(cellKey);
+        }
+
+        setBoard(newBoard);
+        setErrorCells(newErrorCells);        // Kiểm tra xem đã thắng chưa
+        if (checkWin(newBoard)) {
+            setGameWon(true);
+            const completionTime = timer; // Lưu thời gian hoàn thành (giây)
+            setTimeout(() => {
+                if (socket && matchId) {
+                    socket.emit("finishMatch", {
+                        matchId,
+                        winnerId: user.id,
+                        completionTime: completionTime, // Gửi thời gian hoàn thành (số giây)
+                        player1Time: formatTime(completionTime),
+                        player2Time: "-" // Đối thủ chưa hoàn thành
+                    });
+                }
+                // Server sẽ gửi matchFinished event cho cả 2 người
+                // Event listener sẽ xử lý việc chuyển màn hình
+            }, 500);
+        } else {
+            // Gửi tiến độ lên server
+            if (socket && matchId) {
+                socket.emit("updateProgress", {
+                    matchId,
+                    progress: calculateProgress(newBoard),
+                    errors: errors
+                });
+            }
+        }
+
+        // Xóa ô được chọn sau khi điền
+        setSelectedCell(null);
+    };
+
+    const handleDelete = () => {
+        if (!selectedCell || gameWon) return;
+        const { row, col } = selectedCell;
+        const cellKey = `${row}-${col}`;
+
+        if (defaultCells.has(cellKey)) return;
+
+        // Xóa số (cho phép xóa cả ô sai để sửa lại)
+        const newBoard = board.map(r => [...r]);
+        newBoard[row][col] = 0;
+        setBoard(newBoard);
+
+        // Xóa khỏi danh sách lỗi
+        const newErrorCells = new Set(errorCells);
+        newErrorCells.delete(cellKey);
+        setErrorCells(newErrorCells);
+
+        // Vẫn giữ ô được chọn để có thể điền số mới
+        // setSelectedCell(null);
+    };
+
+    const handleHint = () => {
+        if (gameWon) return;
+
+        // Kiểm tra xem có ô sai không - phải sửa ô sai trước
+        if (errorCells.size > 0) {
+            alert("⚠️ Bạn phải sửa lại ô sai (khung đỏ) trước khi dùng gợi ý!");
+            return;
+        }
+
+        // Tìm ô trống đầu tiên
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                const cellKey = `${i}-${j}`;
+                if (!defaultCells.has(cellKey) && board[i][j] === 0) {
+                    // Điền số đúng từ solution
+                    const newBoard = board.map(r => [...r]);
+                    newBoard[i][j] = solution[i][j];
+                    setBoard(newBoard);
+                    setHintsUsed(prev => prev + 1);
+
+                    // Highlight ô vừa gợi ý
+                    setSelectedCell({ row: i, col: j });
+                    setTimeout(() => setSelectedCell(null), 1500);
+
+                    // Gửi tiến độ
+                    if (socket && matchId) {
+                        socket.emit("updateProgress", {
+                            matchId,
+                            progress: calculateProgress(newBoard),
+                            errors: errors
+                        });
+                    }
+
+                    return;
+                }
+            }
+        }
+
+        alert("Không còn gợi ý nào!");
+    };
+
+    const checkWin = (currentBoard) => {
+        // Kiểm tra tất cả ô đã điền đúng
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (currentBoard[i][j] !== solution[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    const calculateProgress = (currentBoard) => {
+        let filled = 0;
+        currentBoard.forEach(row => {
+            row.forEach(cell => {
+                if (cell !== 0) filled++;
+            });
+        });
+        return Math.round((filled / 81) * 100);
+    };
+
+    const handleSurrender = () => {
+        if (window.confirm("Bạn có chắc muốn đầu hàng?")) {
+            setGameWon(true); // Khóa game để không chơi tiếp
+
+            if (socket && matchId) {
+                socket.emit("surrender", { matchId });
+
+                // Tạo kết quả đầu hàng
+                const surrenderResult = {
+                    isUserWinner: false,
+                    user: {
+                        name: user.username,
+                        timeCompleted: "Đầu hàng",
+                        errors: errors,
+                        isWinner: false
+                    },
+                    opponent: {
+                        name: opponent?.username || 'Đối thủ',
+                        timeCompleted: formatTime(timer),
+                        errors: opponentErrors,
+                        isWinner: true
+                    }
+                };
+
+                // Server sẽ gửi matchFinished event cho cả 2 người
+                // Event listener sẽ xử lý và gọi onFinish
+            }
+        }
+    };
+
+    const handleFinish = () => {
+        // Kiểm tra xem đã hoàn thành đúng chưa
+        if (!checkWin(board)) {
+            alert("Bạn chưa hoàn thành đúng! Còn ô sai hoặc ô trống.");
+            return;
+        }
+
+        setGameWon(true);
+        const completionTime = timer; // Lưu thời gian hoàn thành
+
+        if (socket && matchId) {
+            socket.emit("finishMatch", {
+                matchId,
+                winnerId: user.id,
+                completionTime: completionTime, // Gửi thời gian hoàn thành (số giây)
+                player1Time: formatTime(completionTime),
+                player2Time: "-" // Đối thủ chưa hoàn thành
+            });
+        }
+        // Server sẽ gửi matchFinished event cho cả 2 người
+        // Event listener sẽ xử lý việc chuyển màn hình
+    };
+
     return (
         <div className="game-screen">
-            <aside className="game-sidebar">
-                <div className="leaderboard-card">
-                    <h3>Người chơi</h3>
-                    {/* Cập nhật UI của BẠN với errorCells.size */}
-                    <div className="player-score-item">
-                        <div className="player-info-min">
-                            <span className="player-name-min">Bạn (Lỗi: {errorCells?.size ?? 0})</span>
-                            {/* ... */}
+            {/* Header */}
+            <header className="game-header">
+                <div className="header-left">
+                    <div className="header-logo">Sudoku Battle</div>
+                    <div className="score-board">
+                        <span>Lỗi:</span>
+                        <span>{errors}</span>
+                    </div>
+                </div>
+
+                <div className="timer">{formatTime(timer)}</div>
+
+                <div className="header-actions">
+                    <button className="surrender-button" onClick={handleSurrender}>
+                        🏳️ Đầu hàng
+                    </button>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <div className="game-main-content">
+                {/* Sudoku Grid Section */}
+                <div className="sudoku-section">
+                    <div className="sudoku-grid-container">
+                        <div className="sudoku-grid">
+                            {board.map((row, rowIndex) => (
+                                <React.Fragment key={rowIndex}>
+                                    {row.map((cell, colIndex) => {
+                                        const cellKey = `${rowIndex}-${colIndex}`;
+                                        const isDefault = defaultCells.has(cellKey);
+                                        const isSelected = selectedCell?.row === rowIndex && selectedCell?.col === colIndex;
+                                        const isError = errorCells.has(cellKey);
+
+                                        return (
+                                            <div
+                                                key={cellKey}
+                                                className={`cell ${isDefault ? 'default' : 'player-input'} ${isSelected ? 'selected' : ''} ${isError ? 'error' : ''}`}
+                                                onClick={() => handleCellClick(rowIndex, colIndex)}
+                                            >
+                                                {cell !== 0 ? cell : ''}
+                                            </div>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Cập nhật UI của ĐỐI THỦ với opponentErrorCount */}
-                    <div className="player-score-item">
-                        <div className="player-info-min">
-                            <span className="player-name-min">{opponent?.name ?? 'Đối thủ'} (Lỗi: {typeof opponentErrorCount === 'number' ? opponentErrorCount : (opponent?.errorCount ?? 0)})</span>
-                            {/* ... */}
+                    {/* Controls Area */}
+                    <div className="controls-area">
+                        {/* Tool Buttons */}
+                        <div className="tool-buttons">
+                            <button
+                                className="tool-button"
+                                onClick={handleDelete}
+                                disabled={!selectedCell || gameWon}
+                            >
+                                🗑️ Xóa
+                            </button>
+                            <button
+                                className="tool-button"
+                                onClick={handleHint}
+                                disabled={gameWon}
+                            >
+                                💡 Gợi ý ({hintsUsed})
+                            </button>
+                            <button
+                                className="finish-button"
+                                onClick={handleFinish}
+                                disabled={gameWon}
+                            >
+                                ✓ Hoàn thành
+                            </button>
+                        </div>
+
+                        {/* Number Buttons */}
+                        <div className="number-buttons-container">
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                                <button
+                                    key={num}
+                                    className="number-button"
+                                    onClick={() => handleNumberInput(num)}
+                                    disabled={gameWon}
+                                >
+                                    {num}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
-                {/* ... (Chat card) ... */}
-            </aside>
-        </div >
+
+                {/* Sidebar */}
+                <aside className="game-sidebar">
+                    {/* Leaderboard Card */}
+                    <div className="leaderboard-card">
+                        <h3>Người chơi</h3>
+                        <div className="player-score-item">
+                            <div className="player-info-min">
+                                <span className="player-name-min">
+                                    {user?.username || 'Bạn'} (Lỗi: {errors})
+                                </span>
+                                <span className="player-time-min">{formatTime(timer)}</span>
+                            </div>
+                            <div className="progress-bar-min">
+                                <div className="progress-fill" style={{ width: `${calculateProgress(board)}%` }}></div>
+                            </div>
+                        </div>
+
+                        <div className="player-score-item">
+                            <div className="player-info-min">
+                                <span className="player-name-min">
+                                    {opponent?.username || 'Đối thủ'} (Lỗi: {opponentErrors})
+                                </span>
+                                <span className="player-time-min">Đang chơi...</span>
+                            </div>
+                            <div className="progress-bar-min">
+                                <div className="progress-fill" style={{ width: `${opponentProgress}%` }}></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Chat Card */}
+                    <div className="chat-card">
+                        <h3>Chat</h3>
+                        <div className="chat-box">
+                            <p style={{ color: '#999', fontSize: '13px' }}>Chat sẽ được thêm sau...</p>
+                        </div>
+                        <div className="chat-input-area">
+                            <input
+                                type="text"
+                                className="chat-input"
+                                placeholder="Nhập tin nhắn..."
+                                disabled
+                            />
+                            <button className="chat-send-btn" disabled>Gửi</button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
     );
 };
 

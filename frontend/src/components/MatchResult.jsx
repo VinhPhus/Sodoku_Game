@@ -2,83 +2,110 @@ import React from "react";
 import "../style/MatchResult.css";
 // Giả định icon confetti được thêm dưới dạng emoji hoặc một component SVG
 
-// Dữ liệu giả lập cho màn hình kết quả (có thể nhận từ props)
-// --- THAY ĐỔI 1: Cập nhật mockResultData để bao gồm 'status' ---
+// Dữ liệu giả lập cho màn hình kết quả
+// Format chuẩn: name, status, errors, timeCompleted
 const mockResultData = {
-    isUserWinner: true, 
+    isUserWinner: true,
     user: {
         name: 'YOU',
-        status: 'Thắng cuộc', // Thêm status
-        thoughtTime: '01:58',
+        status: 'Thắng cuộc',
         errors: 0,
         timeCompleted: '02:10',
         isWinner: true,
     },
     opponent: {
         name: 'PLAYER A',
-        status: 'Thua cuộc', // Thêm status
-        thoughtTime: '01:30',
+        status: 'Thua cuộc',
         errors: 2,
-        timeCompleted: '-', // Thua
+        timeCompleted: '-',
         isWinner: false,
     }
 };
 
 const ConfettiEmoji = () => (
-    <div style={{fontSize: '2rem', marginBottom: '10px'}}>
+    <div style={{ fontSize: '2rem', marginBottom: '10px' }}>
         🎉🎊🍾
     </div>
 );
 const LoserEmoji = () => (
-    <div style={{fontSize: '2rem', marginBottom: '10px'}}>
+    <div style={{ fontSize: '2rem', marginBottom: '10px' }}>
         😔
     </div>
 );
 
-const MatchResult = ({ 
-    user = { name: 'YOU' }, 
-    opponent = { name: 'PLAYER A' }, 
+const MatchResult = ({
+    user = { name: 'YOU' },
+    opponent = { name: 'PLAYER A' },
     resultData = mockResultData, // Sử dụng mock data nếu không có props
-    onReplay = () => console.log('Replay clicked'), 
-    onGoToLobby = () => console.log('Go to Lobby clicked'), 
+    onReplay = () => console.log('Replay clicked'),
+    onGoToLobby = () => console.log('Go to Lobby clicked'),
     onViewHistory = () => console.log('View History clicked')
 }) => {
 
-    // --- THAY ĐỔI 2: Đơn giản hóa logic lấy dữ liệu ---
-    // Dữ liệu đã được chuẩn bị hoàn hảo từ App.jsx
-    const userResult = resultData.user;
-    const opponentResult = resultData.opponent;
+    // Chuẩn hóa dữ liệu theo format mockResultData
+    const normalizeData = (data) => {
+        // Nếu data đã có format đúng (có status)
+        if (data.status) return data;
+
+        // Nếu không, tạo format mới từ dữ liệu cũ
+        const status = data.timeCompleted === "Đầu hàng" ? "Đầu hàng" :
+            (data.isWinner ? "Thắng cuộc" : "Thua cuộc");
+
+        return {
+            name: data.name,
+            status: status,
+            errors: data.errors || 0,
+            timeCompleted: data.timeCompleted,
+            isWinner: data.isWinner
+        };
+    };
+
+    const userResult = normalizeData(resultData.user);
+    const opponentResult = normalizeData(resultData.opponent);
     const winnerName = resultData.isUserWinner ? userResult.name : opponentResult.name;
-    
-    // Hộp 1: WINNER (Hoặc người dùng)
-    const renderBlock = (player, data, isWinner) => (
-        <div className={`player-block ${isWinner ? 'winner' : 'loser'}`}>
-            <h4>{player.name}</h4>
-            
-            {/* --- THAY ĐỔI 3: Thêm dòng hiển thị KẾT QUẢ (Status) --- */}
-            <div className="stat-item">
-                <span className="stat-label">Kết quả:</span>
-                <span className="stat-value" style={{fontWeight: 700, color: isWinner ? 'var(--color-green)' : 'var(--color-red)'}}>
-                    {data.status || (isWinner ? 'Thắng' : 'Thua')}
-                </span>
+
+    // Render block theo format mockResultData
+    const renderBlock = (data, playerLabel) => {
+        const isWinner = data.isWinner;
+
+        return (
+            <div className={`player-block ${isWinner ? 'winner' : 'loser'}`}>
+                <h4>{data.name || playerLabel}</h4>
+
+                {/* Hiển thị Status (Thắng cuộc/Thua cuộc/Đầu hàng) */}
+                <div className="stat-item">
+                    <span className="stat-label">Kết quả:</span>
+                    <span className="stat-value" style={{
+                        fontWeight: 700,
+                        color: data.status === "Đầu hàng" ? 'var(--color-red)' :
+                            (isWinner ? 'var(--color-green)' : 'var(--color-red)')
+                    }}>
+                        {data.status}
+                    </span>
+                </div>
+
+                {/* Hiển thị Số Lỗi */}
+                <div className="stat-item">
+                    <span className="stat-label">Số Lỗi:</span>
+                    <span className={`stat-value ${data.errors > 0 ? 'error-count' : ''}`}>
+                        {data.errors}
+                    </span>
+                </div>
+
+                {/* Hiển thị Thời gian hoàn thành */}
+                <div className="stat-item">
+                    <span className="stat-label">Thời gian hoàn thành:</span>
+                    <span className="stat-value" style={{
+                        fontWeight: 600,
+                        color: data.timeCompleted === "Đầu hàng" ? 'var(--color-red)' :
+                            (data.timeCompleted === "-" ? '#999' : 'var(--color-primary)')
+                    }}>
+                        {data.timeCompleted === "-" ? "Chưa hoàn thành" : data.timeCompleted}
+                    </span>
+                </div>
             </div>
-            
-            <div className="stat-item">
-                <span className="stat-label">Tổng thời gian Suy nghĩ:</span>
-                <span className="stat-value">{data.thoughtTime || 'N/A'}</span>
-            </div>
-            
-            <div className="stat-item">
-                <span className="stat-label">Số Lỗi:</span>
-                <span className={`stat-value ${data.errors > 0 ? 'error-count' : ''}`}>{data.errors}</span>
-            </div>
-            
-            <div className="stat-item">
-                <span className="stat-label">Thời gian Hoàn thành:</span>
-                <span className="stat-value">{data.timeCompleted}</span>
-            </div>
-        </div>
-    );
+        );
+    };
 
 
     return (
@@ -91,15 +118,15 @@ const MatchResult = ({
                         NGƯỜI CHIẾN THẮNG: <span>{winnerName.toUpperCase()}</span>
                     </h2>
                 </header>
-                
+
                 <main className="comparison-container">
                     {/* Hộp 1: Người dùng */}
-                    {renderBlock(user, userResult, resultData.isUserWinner)}
-                    
+                    {renderBlock(userResult, 'YOU')}
+
                     {/* Hộp 2: Đối thủ */}
-                    {renderBlock(opponent, opponentResult, !resultData.isUserWinner)}
+                    {renderBlock(opponentResult, 'Đối thủ')}
                 </main>
-                
+
                 <footer className="action-buttons">
                     <button className="button-replay" onClick={onReplay}>
                         CHƠI LẠI
