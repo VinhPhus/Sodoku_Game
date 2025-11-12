@@ -153,12 +153,7 @@ class MatchService:
         return self.storage.get_leaderboard(limit)
 
     def player_surrender(self, match_id: str, player_id: str) -> Dict:
-        """
-        Người chơi đầu hàng
-        Args:
-            match_id: ID trận đấu
-            player_id: ID người đầu hàng
-        """
+
         match = self.get_match(match_id)
 
         # Xác định người thắng
@@ -167,13 +162,30 @@ class MatchService:
         elif match['player2_id'] == player_id:
             winner_id = match['player1_id']
         else:
-            raise HTTPException(
-                status_code=400, detail="Player not in this match")
+            raise HTTPException(status_code=400, detail="Player not in this match")
 
-        # Kết thúc trận đấu
+        # --- Tính thời gian trận đấu ---
+        try:
+            if match.get("started_at"):
+                started_at = datetime.fromisoformat(match["started_at"])
+                now = datetime.now()
+                elapsed_seconds = int((now - started_at).total_seconds())
+
+                mins = elapsed_seconds // 60
+                secs = elapsed_seconds % 60
+                elapsed_str = f"{mins:02d}:{secs:02d}"
+            else:
+                elapsed_str = "00:00"
+        except Exception:
+            elapsed_str = "Lỗi TG"
+
+        # --- Gán kết quả cho từng người ---
+        player1_time = f"{elapsed_str}"
+        player2_time = f"{elapsed_str}"
+        # --- Kết thúc trận đấu ---
         return self.finish_match(
             match_id,
             winner_id=winner_id,
-            player1_time="Đầu hàng" if player_id == match['player1_id'] else "Thắng",
-            player2_time="Đầu hàng" if player_id == match['player2_id'] else "Thắng"
+            player1_time=player1_time,
+            player2_time=player2_time
         )

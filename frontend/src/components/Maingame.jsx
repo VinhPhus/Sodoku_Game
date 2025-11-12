@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSocket } from "../context/SocketContext";
 import "../style/Maingame.css";
 
@@ -147,6 +147,11 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
     const [errorCells, setErrorCells] = useState(new Set());
     const [hintsUsed, setHintsUsed] = useState(0);
     const [gameWon, setGameWon] = useState(false);
+    
+    // --- States cho Chat ---
+    const chatBoxRef = useRef(null);
+    const [chatHistory, setChatHistory] = useState([]); // Format: { sender: {id, username}, message, isSender }
+    const [currentMessage, setCurrentMessage] = useState("");
 
     // Timer
     useEffect(() => {
@@ -226,15 +231,30 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
             }, 1000);
         };
 
+        // Lắng nghe tin nhắn chat
+        const handleChatMessageReceived = (data) => {
+            console.log("Chat message received:", data);
+            setChatHistory(prev => [...prev, data]);
+        };
+        
+        socket.on("chatMessageReceived", handleChatMessageReceived);
         socket.on("opponentProgress", handleOpponentProgress);
         socket.on("matchFinished", handleMatchFinished);
 
         return () => {
             socket.off("opponentProgress", handleOpponentProgress);
             socket.off("matchFinished", handleMatchFinished);
+            socket.off("chatMessageReceived", handleChatMessageReceived);
         };
     }, [socket, matchId, user, opponent, board, errors, opponentErrors, onFinish]);
-
+    
+    // Auto-scroll chatbox
+    useEffect(() => {
+        if (chatBoxRef.current) {
+            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+        }
+    }, [chatHistory]);
+    
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -271,7 +291,6 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
         if (defaultCells.has(cellKey)) return;
 
         const newBoard = board.map(r => [...r]);
-        const oldValue = board[row][col];
         newBoard[row][col] = number;
 
         // Kiểm tra nước đi có hợp lệ không
@@ -300,7 +319,8 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
         }
 
         setBoard(newBoard);
-        setErrorCells(newErrorCells);        // Kiểm tra xem đã thắng chưa
+        setErrorCells(newErrorCells);
+        // Kiểm tra xem đã thắng chưa
         if (checkWin(newBoard)) {
             setGameWon(true);
             const completionTime = timer; // Lưu thời gian hoàn thành (giây)
@@ -423,25 +443,11 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
             if (socket && matchId) {
                 socket.emit("surrender", { matchId });
 
-                // Tạo kết quả đầu hàng
-                const surrenderResult = {
-                    isUserWinner: false,
-                    user: {
-                        name: user.username,
-                        timeCompleted: "Đầu hàng",
-                        errors: errors,
-                        isWinner: false
-                    },
-                    opponent: {
-                        name: opponent?.username || 'Đối thủ',
-                        timeCompleted: formatTime(timer),
-                        errors: opponentErrors,
-                        isWinner: true
-                    }
-                };
-
+                // Tạo kết quả đầu hàng (dù server sẽ gửi lại,
+                // chúng ta không cần tự gọi onFinish ở đây nữa)
+                
                 // Server sẽ gửi matchFinished event cho cả 2 người
-                // Event listener sẽ xử lý và gọi onFinish
+                // Event listener (handleMatchFinished) sẽ xử lý và gọi onFinish
             }
         }
     };
@@ -466,7 +472,29 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
             });
         }
         // Server sẽ gửi matchFinished event cho cả 2 người
-        // Event listener sẽ xử lý việc chuyển màn hình
+        // Event listener (handleMatchFinished) sẽ xử lý việc chuyển màn hình
+    };
+
+    // Hàm gửi tin nhắn (đặt bên ngoài useEffect)
+    const handleSendChat = () => {
+        if (!socket || !matchId || currentMessage.trim() === "") return;
+
+        const messageData = {
+            sender: { id: user.id, username: user.username },
+            message: currentMessage.trim()
+        };
+
+        // 1. Gửi lên server
+        socket.emit("chatMessage", {
+            matchId: matchId,
+            message: currentMessage.trim()
+        });
+
+        // 2. Thêm vào lịch sử chat của chính mình (để hiển thị ngay)
+        setChatHistory(prev => [...prev, { ...messageData, isSender: true }]);
+        
+        // 3. Xóa input
+        setCurrentMessage("");
     };
 
     return (
@@ -595,17 +623,44 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
                     {/* Chat Card */}
                     <div className="chat-card">
                         <h3>Chat</h3>
-                        <div className="chat-box">
-                            <p style={{ color: '#999', fontSize: '13px' }}>Chat sẽ được thêm sau...</p>
+                        <div className="chat-box" ref={chatBoxRef}> {/* Thêm ref vào đây */}
+                            {/* --- NỘI DUNG CHAT-BOX ĐÃ CẬP NHẬT --- */}
+                            {chatHistory.length === 0 ? (
+                                <p style={{ color: '#999', fontSize: '13px', margin: 'auto', textAlign: 'center' }}>
+                                    Bắt đầu cuộc trò chuyện...
+                                </p>
+                            ) : (
+                                chatHistory.map((chat, index) => (
+                                    <div 
+                                        key={index} 
+                                        className={`chat-message ${chat.isSender ? 'sent' : 'received'}`}
+                                    >
+                                        <span className="chat-sender-name">
+                                            {chat.isSender ? "Bạn" : (chat.sender?.username || 'Đối thủ')}:
+                                        </span>
+                                        {' '}
+                                        <span className="chat-message-text">{chat.message}</span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                         <div className="chat-input-area">
                             <input
                                 type="text"
                                 className="chat-input"
                                 placeholder="Nhập tin nhắn..."
-                                disabled
+                                value={currentMessage} // <-- Cập nhật
+                                onChange={e => setCurrentMessage(e.target.value)} // <-- Cập nhật
+                                onKeyPress={e => e.key === 'Enter' && handleSendChat()} // <-- Thêm: Gửi bằng Enter
+                                disabled={gameWon} // <-- Bỏ 'disabled' cứng
                             />
-                            <button className="chat-send-btn" disabled>Gửi</button>
+                            <button 
+                                className="chat-send-btn" 
+                                onClick={handleSendChat} // <-- Cập nhật
+                                disabled={gameWon || currentMessage.trim() === ""}
+                            >
+                                ⮞
+                            </button>
                         </div>
                     </div>
                 </aside>
