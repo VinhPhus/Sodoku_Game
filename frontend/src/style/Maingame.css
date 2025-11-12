@@ -254,7 +254,8 @@
   background-color: #e4e6eb;
 }
 
-.tool-button.active {
+.tool-button.active,
+.tool-button.active-pencil {
   background-color: var(--color-blue);
   color: white;
   border-color: var(--color-blue);
@@ -518,57 +519,68 @@
     flex-wrap: wrap;
     justify-content: center;
 
-  
-  .chat-box {
-    display: flex;
-    flex-direction: column;
-    gap: 8px; /* Khoảng cách giữa các tin nhắn */
-    /* Xóa các style cũ nếu có (ví dụ: <p> ở giữa) */
-}
 
-  .chat-message {
-    font-size: 14px;
-    padding: 6px 10px;
-    border-radius: 12px;
-    max-width: 85%;
-    word-wrap: break-word; /* Tự xuống dòng */
-  }
+    .chat-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      /* Khoảng cách giữa các tin nhắn */
+      /* Xóa các style cũ nếu có (ví dụ: <p> ở giữa) */
+    }
 
-  .chat-sender-name {
-  font-weight: 600;
-  margin-right: 5px; /* Đây là khoảng cách bạn muốn thêm vào */
-  }
+    .chat-message {
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      max-width: 85%;
+      word-wrap: break-word;
+      /* Tự xuống dòng */
+    }
 
-  /* Tin nhắn đã nhận (của đối thủ) */
-  .chat-message.received {
-    background-color: var(--color-gray-light);
-    color: var(--text-primary);
-    align-self: flex-start; /* Căn trái */
-  }
-  .chat-message.received .chat-sender-name {
-    color: var(--color-blue); /* Màu tên đối thủ */
-  }
+    .chat-sender-name {
+      font-weight: 600;
+      margin-right: 5px;
+      /* Đây là khoảng cách bạn muốn thêm vào */
+    }
 
-  /* Tin nhắn đã gửi (của mình) */
-  .chat-message.sent {
-    background-color: var(--color-blue);
-    color: white;
-    align-self: flex-end; /* Căn phải */
-  }
-  .chat-message.sent .chat-sender-name {
-    color: #f0f2f5; /* Màu trắng nhạt */
-  }
+    /* Tin nhắn đã nhận (của đối thủ) */
+    .chat-message.received {
+      background-color: var(--color-gray-light);
+      color: var(--text-primary);
+      align-self: flex-start;
+      /* Căn trái */
+    }
 
-  /* Bỏ vô hiệu hóa nút gửi khi có text */
-  .chat-send-btn:disabled {
-    background-color: #ccc;
-  }
-  .chat-send-btn:not(:disabled) {
-    background-color: var(--color-blue);
-  }
-  .chat-send-btn:not(:disabled):hover {
-    background-color: #0056b3;
-  }
+    .chat-message.received .chat-sender-name {
+      color: var(--color-blue);
+      /* Màu tên đối thủ */
+    }
+
+    /* Tin nhắn đã gửi (của mình) */
+    .chat-message.sent {
+      background-color: var(--color-blue);
+      color: white;
+      align-self: flex-end;
+      /* Căn phải */
+    }
+
+    .chat-message.sent .chat-sender-name {
+      color: #f0f2f5;
+      /* Màu trắng nhạt */
+    }
+
+    /* Bỏ vô hiệu hóa nút gửi khi có text */
+    .chat-send-btn:disabled {
+      background-color: #ccc;
+    }
+
+    .chat-send-btn:not(:disabled) {
+      background-color: var(--color-blue);
+    }
+
+    .chat-send-btn:not(:disabled):hover {
+      background-color: #0056b3;
+    }
 
   }
 }

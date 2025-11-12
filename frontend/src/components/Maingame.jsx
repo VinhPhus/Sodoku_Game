@@ -123,15 +123,20 @@ const generateSudokuGame = (difficulty = 'medium') => {
     return { puzzle, solution };
 };
 
-const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
+const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFinish, onSurrender }) => {
     const { socket } = useSocket();
     const [timer, setTimer] = useState(0);
     const [errors, setErrors] = useState(0);
     const [opponentErrors, setOpponentErrors] = useState(0);
     const [opponentProgress, setOpponentProgress] = useState(0);
 
-    // Khởi tạo bàn chơi với solution
-    const [gameData] = useState(() => generateSudokuGame('medium'));
+    // Sử dụng board từ server nếu có, nếu không thì tạo mới (fallback)
+    const [gameData] = useState(() => {
+        if (serverBoard && serverSolution) {
+            return { puzzle: serverBoard, solution: serverSolution };
+        }
+        return generateSudokuGame('medium');
+    });
     const [solution] = useState(gameData.solution);
     const [board, setBoard] = useState(() => gameData.puzzle.map(row => [...row]));
     const [selectedCell, setSelectedCell] = useState(null);
@@ -147,7 +152,14 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
     const [errorCells, setErrorCells] = useState(new Set());
     const [hintsUsed, setHintsUsed] = useState(0);
     const [gameWon, setGameWon] = useState(false);
-    
+
+    // Giới hạn số lần gợi ý
+    const MAX_HINTS = 3;
+
+    // Chế độ viết chì (pencil mode)
+    const [pencilMode, setPencilMode] = useState(false);
+    const [pencilMarks, setPencilMarks] = useState({}); // { "row-col": Set([1,2,3]) }
+
     // --- States cho Chat ---
     const chatBoxRef = useRef(null);
     const [chatHistory, setChatHistory] = useState([]); // Format: { sender: {id, username}, message, isSender }
@@ -236,7 +248,7 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
             console.log("Chat message received:", data);
             setChatHistory(prev => [...prev, data]);
         };
-        
+
         socket.on("chatMessageReceived", handleChatMessageReceived);
         socket.on("opponentProgress", handleOpponentProgress);
         socket.on("matchFinished", handleMatchFinished);
@@ -247,14 +259,14 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
             socket.off("chatMessageReceived", handleChatMessageReceived);
         };
     }, [socket, matchId, user, opponent, board, errors, opponentErrors, onFinish]);
-    
+
     // Auto-scroll chatbox
     useEffect(() => {
         if (chatBoxRef.current) {
             chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
         }
     }, [chatHistory]);
-    
+
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -290,11 +302,39 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
         // Không cho sửa ô mặc định
         if (defaultCells.has(cellKey)) return;
 
+        // **CHẾ ĐỘ VIẾT CHÌ (PENCIL MODE)**
+        if (pencilMode) {
+            const newMarks = { ...pencilMarks };
+            if (!newMarks[cellKey]) {
+                newMarks[cellKey] = new Set();
+            }
+
+            // Toggle: thêm hoặc xóa số
+            if (newMarks[cellKey].has(number)) {
+                newMarks[cellKey].delete(number);
+            } else {
+                newMarks[cellKey].add(number);
+            }
+
+            // Xóa nếu rỗng
+            if (newMarks[cellKey].size === 0) {
+                delete newMarks[cellKey];
+            }
+
+            setPencilMarks(newMarks);
+            return; // Không cập nhật board
+        }
+
+        // **CHẾ ĐỘ THƯỜNG (ĐIỀN SỐ CHÍNH THỨC)**
         const newBoard = board.map(r => [...r]);
         newBoard[row][col] = number;
 
         // Kiểm tra nước đi có hợp lệ không
         const newErrorCells = new Set(errorCells);
+
+        // Xóa pencil marks khi điền số chính thức
+        const newMarks = { ...pencilMarks };
+        delete newMarks[cellKey];
 
         if (number !== 0) {
             // Kiểm tra với solution
@@ -306,6 +346,7 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
                 // Không cập nhật board nếu đang sai
                 setErrorCells(newErrorCells);
                 setBoard(newBoard); // Vẫn cập nhật board để hiện số sai
+                setPencilMarks(newMarks);
 
                 // Không cho chọn ô khác hoặc điền số khác cho đến khi sửa
                 return; // Dừng tại đây, không cho thực hiện nước đi tiếp
@@ -320,6 +361,7 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
 
         setBoard(newBoard);
         setErrorCells(newErrorCells);
+        setPencilMarks(newMarks);
         // Kiểm tra xem đã thắng chưa
         if (checkWin(newBoard)) {
             setGameWon(true);
@@ -368,6 +410,11 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
         const newErrorCells = new Set(errorCells);
         newErrorCells.delete(cellKey);
         setErrorCells(newErrorCells);
+
+        // Xóa pencil marks
+        const newMarks = { ...pencilMarks };
+        delete newMarks[cellKey];
+        setPencilMarks(newMarks);
 
         // Vẫn giữ ô được chọn để có thể điền số mới
         // setSelectedCell(null);
@@ -445,7 +492,7 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
 
                 // Tạo kết quả đầu hàng (dù server sẽ gửi lại,
                 // chúng ta không cần tự gọi onFinish ở đây nữa)
-                
+
                 // Server sẽ gửi matchFinished event cho cả 2 người
                 // Event listener (handleMatchFinished) sẽ xử lý và gọi onFinish
             }
@@ -492,7 +539,7 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
 
         // 2. Thêm vào lịch sử chat của chính mình (để hiển thị ngay)
         setChatHistory(prev => [...prev, { ...messageData, isSender: true }]);
-        
+
         // 3. Xóa input
         setCurrentMessage("");
     };
@@ -538,7 +585,20 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
                                                 className={`cell ${isDefault ? 'default' : 'player-input'} ${isSelected ? 'selected' : ''} ${isError ? 'error' : ''}`}
                                                 onClick={() => handleCellClick(rowIndex, colIndex)}
                                             >
-                                                {cell !== 0 ? cell : ''}
+                                                {cell !== 0 ? (
+                                                    <span className="cell-number">{cell}</span>
+                                                ) : pencilMarks[cellKey] && pencilMarks[cellKey].size > 0 ? (
+                                                    <div className="pencil-marks">
+                                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                                                            <span
+                                                                key={num}
+                                                                className={pencilMarks[cellKey].has(num) ? 'marked' : ''}
+                                                            >
+                                                                {pencilMarks[cellKey].has(num) ? num : ''}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : ''}
                                             </div>
                                         );
                                     })}
@@ -551,6 +611,13 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
                     <div className="controls-area">
                         {/* Tool Buttons */}
                         <div className="tool-buttons">
+                            <button
+                                className={`tool-button ${pencilMode ? 'active-pencil' : ''}`}
+                                onClick={() => setPencilMode(!pencilMode)}
+                                disabled={gameWon}
+                            >
+                                ✏️ Viết chì {pencilMode ? '(BẬT)' : ''}
+                            </button>
                             <button
                                 className="tool-button"
                                 onClick={handleDelete}
@@ -631,8 +698,8 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
                                 </p>
                             ) : (
                                 chatHistory.map((chat, index) => (
-                                    <div 
-                                        key={index} 
+                                    <div
+                                        key={index}
                                         className={`chat-message ${chat.isSender ? 'sent' : 'received'}`}
                                     >
                                         <span className="chat-sender-name">
@@ -654,8 +721,8 @@ const Maingame = ({ user, opponent, matchId, onFinish, onSurrender }) => {
                                 onKeyPress={e => e.key === 'Enter' && handleSendChat()} // <-- Thêm: Gửi bằng Enter
                                 disabled={gameWon} // <-- Bỏ 'disabled' cứng
                             />
-                            <button 
-                                className="chat-send-btn" 
+                            <button
+                                className="chat-send-btn"
                                 onClick={handleSendChat} // <-- Cập nhật
                                 disabled={gameWon || currentMessage.trim() === ""}
                             >

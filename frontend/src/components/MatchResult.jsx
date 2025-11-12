@@ -37,6 +37,9 @@ const MatchResult = ({
     user = { name: 'YOU' },
     opponent = { name: 'PLAYER A' },
     resultData = mockResultData, // Sử dụng mock data nếu không có props
+    matchId = null,
+    difficulty = 'medium',
+    socket = null,
     onReplay = () => console.log('Replay clicked'),
     onGoToLobby = () => console.log('Go to Lobby clicked'),
     onViewHistory = () => console.log('View History clicked')
@@ -128,7 +131,18 @@ const MatchResult = ({
                 </main>
 
                 <footer className="action-buttons">
-                    <button className="button-replay" onClick={onReplay}>
+                    <button className="button-replay" onClick={() => {
+                        if (socket && matchId) {
+                            // Gửi yêu cầu rematch qua socket
+                            socket.emit('rematchRequest', {
+                                matchId: matchId,
+                                difficulty: difficulty
+                            });
+                        } else {
+                            // Fallback nếu không có socket
+                            onReplay();
+                        }
+                    }}>
                         CHƠI LẠI
                     </button>
                     <button className="button-lobby" onClick={onGoToLobby}>

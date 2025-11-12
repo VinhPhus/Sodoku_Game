@@ -1,0 +1,110 @@
+.rematch-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.rematch-dialog {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.rematch-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.rematch-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary, #1c1e21);
+    margin-bottom: 12px;
+}
+
+.rematch-message {
+    font-size: 1rem;
+    color: var(--text-secondary, #65676b);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.rematch-message strong {
+    color: var(--color-blue, #0084ff);
+    font-weight: 600;
+}
+
+.rematch-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.rematch-accept-btn,
+.rematch-decline-btn {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rematch-accept-btn {
+    background-color: var(--color-green, #42b72a);
+    color: white;
+}
+
+.rematch-accept-btn:hover {
+    background-color: #36a420;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 183, 42, 0.4);
+}
+
+.rematch-decline-btn {
+    background-color: var(--color-red, #e4e6eb);
+    color: var(--text-primary, #1c1e21);
+}
+
+.rematch-decline-btn:hover {
+    background-color: #d8dadf;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
