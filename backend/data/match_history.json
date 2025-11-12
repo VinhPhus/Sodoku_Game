@@ -208,26 +208,5 @@
     "player1_time": "Thắng",
     "player2_time": "Đầu hàng",
     "saved_at": "2025-11-12T16:05:29.545797"
-  },
-  {
-    "match_id": "312fd631-bfea-433d-8801-b7440db604d7",
-    "player1_id": "user_1762957348513_341",
-    "player2_id": "user_1762957349182_946",
-    "status": "finished",
-    "created_at": "2025-11-12T21:22:31.145368",
-    "started_at": "2025-11-12T21:22:34.187073",
-    "finished_at": "2025-11-12T21:32:49.915841",
-    "difficulty": "medium",
-    "player1_name": "34534",
-    "player2_name": "ẻt",
-    "player1_progress": 100,
-    "player2_progress": 0,
-    "player1_errors": 2,
-    "player2_errors": 0,
-    "updated_at": "2025-11-12T21:32:49.915841",
-    "winner_id": "user_1762957348513_341",
-    "player1_time": 612,
-    "player2_time": "-",
-    "saved_at": "2025-11-12T21:32:49.918122"
   }
 ]
