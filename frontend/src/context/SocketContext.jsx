@@ -17,7 +17,7 @@ export const SocketProvider = ({ children }) => {
         return; // Đã kết nối rồi
       }
 
-      const wsUrl = `ws://localhost:8000/ws/game/${userIdParam || 'guest_' + Date.now()}`;
+      const wsUrl = `ws://26.135.199.240:8000/ws/game/${userIdParam || 'guest_' + Date.now()}`;
       console.log("Connecting to:", wsUrl);
 
       const ws = new WebSocket(wsUrl);

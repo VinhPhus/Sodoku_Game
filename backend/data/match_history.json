@@ -210,6 +210,18 @@
     "saved_at": "2025-11-12T16:05:29.545797"
   },
   {
+<<<<<<< HEAD
+    "match_id": "b15dc276-efea-461b-baac-19c6246b663b",
+    "player1_id": "user_1762960828510_991",
+    "player2_id": "user_1762960830136_453",
+    "status": "finished",
+    "created_at": "2025-11-12T22:20:44.451484",
+    "started_at": "2025-11-12T22:20:47.604648",
+    "finished_at": "2025-11-12T22:21:01.832183",
+    "difficulty": "medium",
+    "player1_name": "ty",
+    "player2_name": "Bá Thành",
+=======
     "match_id": "7fbc00cd-f60c-4364-8187-a36e14852d39",
     "player1_id": "user_1762959552570_862",
     "player2_id": "user_1762959554330_287",
@@ -220,10 +232,51 @@
     "difficulty": "medium",
     "player1_name": "tien",
     "player2_name": "34534",
+>>>>>>> 12c240a339eef1025fdf3d19f56c2d7f2335eac5
     "player1_progress": 0,
     "player2_progress": 0,
     "player1_errors": 0,
     "player2_errors": 0,
+<<<<<<< HEAD
+    "updated_at": "2025-11-12T22:21:01.832183",
+    "winner_id": "user_1762960830136_453",
+    "player1_time": "00:14",
+    "player2_time": "00:14",
+    "saved_at": "2025-11-12T22:21:01.855844"
+  },
+  {
+    "match_id": "7da9ac13-8c7e-420e-a66c-f5e756ad77a6",
+    "player1_id": "user_1763014647482_201",
+    "player2_id": "user_1763014564091_562",
+    "status": "finished",
+    "created_at": "2025-11-13T13:16:08.342843",
+    "started_at": "2025-11-13T13:16:11.722871",
+    "finished_at": "2025-11-13T13:16:19.051068",
+    "difficulty": "medium",
+    "player1_name": "Phu",
+    "player2_name": "thành",
+    "player1_progress": 0,
+    "player2_progress": 0,
+    "player1_errors": 0,
+    "player2_errors": 0,
+    "updated_at": "2025-11-13T13:16:19.051068",
+    "winner_id": "user_1763014647482_201",
+    "player1_time": "00:07",
+    "player2_time": "00:07",
+    "saved_at": "2025-11-13T13:16:19.055059"
+  },
+  {
+    "match_id": "a5c59fb5-e769-4be0-8793-ffe8514b26c4",
+    "player1_id": "user_1763014689146_955",
+    "player2_id": "user_1763014664835_531",
+    "status": "finished",
+    "created_at": "2025-11-13T13:18:19.392089",
+    "started_at": "2025-11-13T13:18:22.659987",
+    "finished_at": "2025-11-13T13:18:40.815733",
+    "difficulty": "medium",
+    "player1_name": "Bá Thành",
+    "player2_name": "phu",
+=======
     "updated_at": "2025-11-12T21:59:27.690780",
     "winner_id": "user_1762959554330_287",
     "player1_time": "00:06",
@@ -241,10 +294,18 @@
     "difficulty": "medium",
     "player1_name": "thanh",
     "player2_name": "tien",
+>>>>>>> 12c240a339eef1025fdf3d19f56c2d7f2335eac5
     "player1_progress": 100,
     "player2_progress": 0,
     "player1_errors": 0,
     "player2_errors": 0,
+<<<<<<< HEAD
+    "updated_at": "2025-11-13T13:18:40.815733",
+    "winner_id": "user_1763014689146_955",
+    "player1_time": 18,
+    "player2_time": "-",
+    "saved_at": "2025-11-13T13:18:40.817732"
+=======
     "board": [
       [
         1,
@@ -675,5 +736,6 @@
     "player1_time": "00:14",
     "player2_time": "00:14",
     "saved_at": "2025-11-12T22:41:56.125260"
+>>>>>>> 12c240a339eef1025fdf3d19f56c2d7f2335eac5
   }
 ]

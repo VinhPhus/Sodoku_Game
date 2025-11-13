@@ -1,4 +1,4 @@
-const socket = new WebSocket("ws://127.0.0.1:8000/ws/game");
+const socket = new WebSocket("ws://26.135.199.240:8000/ws/game");
 
 // Khi server chấp nhận kết nối
 socket.onopen = () => {
