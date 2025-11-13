@@ -13,13 +13,13 @@ class MatchService:
 
     def create_match(self, user_id: str, opponent_id: str, difficulty: str = "medium") -> Dict:
         """
-        Tạo trận đấu mới
+        Tạo trận đấu mới với board chung cho cả 2 players
         Args:
             user_id: ID người chơi 1
             opponent_id: ID người chơi 2
             difficulty: Độ khó (easy, medium, hard)
         Returns:
-            Dict chứa thông tin trận đấu
+            Dict chứa thông tin trận đấu và board
         """
         # Kiểm tra users có tồn tại
         user = self.storage.get_user(user_id)
@@ -31,6 +31,11 @@ class MatchService:
         # Tạo match_id duy nhất
         match_id = str(uuid.uuid4())
 
+        # Tạo board chung cho cả 2 players
+        from .sudoku_service import SudokuService
+        sudoku_service = SudokuService()
+        board_data = sudoku_service.generate_board(difficulty)
+
         match = self.storage.create_match(
             match_id=match_id,
             player1_id=user_id,
@@ -41,7 +46,9 @@ class MatchService:
             player1_progress=0,
             player2_progress=0,
             player1_errors=0,
-            player2_errors=0
+            player2_errors=0,
+            board=board_data['board'],  # Lưu puzzle
+            solution=board_data['solution']  # Lưu solution
         )
 
         return match
@@ -162,7 +169,8 @@ class MatchService:
         elif match['player2_id'] == player_id:
             winner_id = match['player1_id']
         else:
-            raise HTTPException(status_code=400, detail="Player not in this match")
+            raise HTTPException(
+                status_code=400, detail="Player not in this match")
 
         # --- Tính thời gian trận đấu ---
         try:

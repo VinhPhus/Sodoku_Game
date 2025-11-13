@@ -8,6 +8,7 @@ import MatchSetup from "./components/MatchSetup";
 import Maingame from "./components/Maingame";
 import MatchResult from "./components/MatchResult";
 import History from "./components/History";
+import RematchDialog from "./components/RematchDialog";
 
 const AppContent = () => {
   const { socket } = useSocket();
@@ -20,6 +21,17 @@ const AppContent = () => {
 
   const [challenger, setChallenger] = useState(null);
   const [onlinePlayers, setOnlinePlayers] = useState([]);
+
+  // Board chung từ server
+  const [gameBoard, setGameBoard] = useState(null);
+  const [gameSolution, setGameSolution] = useState(null);
+
+  // Rematch state
+  const [rematchRequester, setRematchRequester] = useState(null);
+  const [pendingRematchData, setPendingRematchData] = useState(null);
+
+  // Lưu difficulty cho rematch
+  const [currentDifficulty, setCurrentDifficulty] = useState('medium');
 
   // --- Khi login thành công ---
   const handleAuthSuccess = (username) => {
@@ -73,6 +85,10 @@ const AppContent = () => {
     socket.on("matchStarted", (data) => {
       console.log("matchStarted", data);
       if (data.matchId) {
+        // Lưu board và solution từ server
+        setGameBoard(data.board);
+        setGameSolution(data.solution);
+
         // Đảm bảo matchId được lưu vào opponent
         setOpponent(prev => ({
           ...prev,
@@ -92,12 +108,49 @@ const AppContent = () => {
       }
     });
 
+    // Khi nhận yêu cầu rematch
+    socket.on("rematchRequested", (data) => {
+      console.log("rematchRequested", data);
+      setRematchRequester(data.requester);
+      setPendingRematchData({
+        matchId: data.matchId,
+        difficulty: data.difficulty,
+        requesterId: data.requester.id
+      });
+    });
+
+    // Khi rematch được chấp nhận
+    socket.on("rematchAccepted", (data) => {
+      console.log("rematchAccepted", data);
+      const opponentData = {
+        id: data.opponent.id,
+        username: data.opponent.username,
+        avatar: data.opponent.avatar || null,
+        matchId: data.matchId
+      };
+      setOpponent(opponentData);
+      setScreen("matchSetup");
+      setRematchRequester(null);
+      setPendingRematchData(null);
+    });
+
+    // Khi rematch bị từ chối
+    socket.on("rematchDeclined", () => {
+      console.log("rematchDeclined");
+      alert("Đối thủ đã từ chối yêu cầu chơi lại!");
+      setRematchRequester(null);
+      setPendingRematchData(null);
+    });
+
     return () => {
       socket.off("onlinePlayers");
       socket.off("challengeReceived");
       socket.off("challengeResponse");
       socket.off("matchStarted");
       socket.off("playerLeft");
+      socket.off("rematchRequested");
+      socket.off("rematchAccepted");
+      socket.off("rematchDeclined");
     };
   }, [socket, user]);
 
@@ -157,6 +210,30 @@ const AppContent = () => {
     setScreen("matchResult");
   };
 
+  // --- Rematch handlers ---
+  const handleAcceptRematch = () => {
+    if (socket && pendingRematchData) {
+      socket.emit('rematchResponse', {
+        requesterId: pendingRematchData.requesterId,
+        accepted: true,
+        matchId: pendingRematchData.matchId,
+        difficulty: pendingRematchData.difficulty
+      });
+    }
+  };
+
+  const handleDeclineRematch = () => {
+    if (socket && pendingRematchData) {
+      socket.emit('rematchResponse', {
+        requesterId: pendingRematchData.requesterId,
+        accepted: false,
+        matchId: pendingRematchData.matchId
+      });
+    }
+    setRematchRequester(null);
+    setPendingRematchData(null);
+  };
+
   // --- Render screen ---
   const renderScreen = () => {
     switch (screen) {
@@ -193,6 +270,8 @@ const AppContent = () => {
             user={user}
             opponent={opponent}
             matchId={opponent?.matchId}
+            serverBoard={gameBoard}
+            serverSolution={gameSolution}
             onFinish={handleFinishGame}
             onSurrender={handleSurrender}
           />
@@ -204,6 +283,9 @@ const AppContent = () => {
             user={user}
             opponent={opponent}
             resultData={lastMatchResult}
+            matchId={opponent?.matchId}
+            difficulty={currentDifficulty}
+            socket={socket}
             onReplay={() => setScreen("matchSetup")}
             onGoToLobby={() => setScreen("lobby")}
             onViewHistory={() => setScreen("history")}
@@ -224,7 +306,18 @@ const AppContent = () => {
     }
   };
 
-  return <div className="App">{renderScreen()}</div>;
+  return (
+    <div className="App">
+      {renderScreen()}
+      {rematchRequester && (
+        <RematchDialog
+          requesterName={rematchRequester.username}
+          onAccept={handleAcceptRematch}
+          onDecline={handleDeclineRematch}
+        />
+      )}
+    </div>
+  );
 };
 
 export default function App() {
