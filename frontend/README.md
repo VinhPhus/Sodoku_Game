@@ -2,13 +2,6 @@
 
 > Game đối kháng Sudoku 1v1 được xây dựng bằng React và Python
 
-## 📑 Mục lục
-
-- [Tổng quan](#tổng-quan)
-- [Luồng hoạt động](#luồng-hoạt-động)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Chức năng chính](#chức-năng-chính)
-
 ## 🎯 Tổng quan
 
 Một trò chơi Sudoku đối kháng thời gian thực, cho phép người chơi:
@@ -71,7 +64,7 @@ src/
   - 💡 Gợi ý
 - ⏲️ Đồng hồ đếm ngược
 - 💬 Chat với đối thủ
-- 📊 Bảng xếp hạng mini
+
 
 ### 4. Kết quả (`MatchResult.jsx`)
 
@@ -90,6 +83,6 @@ src/
   - 🏆 Kết quả
   - ⌛ Thời gian
 
-## 📝 License
 
-MIT License - Copyright (c) 2023 Team Sudoku Battle
+
+
