@@ -1,20 +1,14 @@
 [
   {
-    "id": "f660ae7b-20f0-4c14-ac57-4d7db65a0433",
-    "username": "Huỳnh Bá Thành",
-    "hashed_password": "$2b$12$Bq7BUb7eMmNzu1Lbz3/eZeeuQnsG0FVTaYcOOU4OH1c4hEcLK6EYa",
-    "created_at": "2025-11-14T22:40:45.809069"
+    "id": "a6529321-7570-4bba-8b57-f674d0211f7c",
+    "username": "Thành",
+    "hashed_password": "$2b$12$qO6174SRNpUcfi9zFyO64uNQxfLphsz7zv1HDRiuNqRFWbD2lrpcG",
+    "created_at": "2025-11-15T00:42:53.055807"
   },
   {
-    "id": "d51ca31d-88b0-4612-975e-ea4fe52df35c",
-    "username": "Huỳnh Bá Thành",
-    "hashed_password": "$2b$12$D.ciDBJQ5kHOE4cmuKSoH.vaMTKJS8pej0oqpERDCqc9fAnE87WTG",
-    "created_at": "2025-11-14T22:45:18.003175"
-  },
-  {
-    "id": "dd14deb2-2911-4c6d-913d-58491ff40920",
-    "username": "f660ae7b-20f0-4c14-ac57-4d7db65a0433",
-    "hashed_password": "Huỳnh Bá Thành",
-    "created_at": "2025-11-14T22:45:25.725556"
+    "id": "003449f9-360b-44d7-bb70-2fc47abcbea2",
+    "username": "Bá Thành",
+    "hashed_password": "$2b$12$yZP91ZN0BacjykaCwPQoRuFGMTLwTlBKr82eLbaehmlWiucTA73Xm",
+    "created_at": "2025-11-15T00:43:04.796880"
   }
 ]

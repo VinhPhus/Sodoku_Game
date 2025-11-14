@@ -5,8 +5,7 @@ const RematchDialog = ({ requesterName, onAccept, onDecline }) => {
     return (
         <div className="rematch-dialog-overlay">
             <div className="rematch-dialog">
-                <div className="rematch-icon">🎮</div>
-                <h2 className="rematch-title">Yêu cầu đấu lại</h2>
+                {/* ... icon và tiêu đề ... */}
                 <p className="rematch-message">
                     <strong>{requesterName}</strong> muốn chơi lại với bạn!
                 </p>

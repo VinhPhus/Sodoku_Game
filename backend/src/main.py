@@ -2,7 +2,13 @@ from fastapi import FastAPI, HTTPException # <-- Thêm HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel # <-- Thêm BaseModel
 
-from .routes import user_api, history_api, leaderboard_api, match_api
+# ===== SỬA LỖI ỔN ĐỊNH =====
+# Chỉ import các API router mà chúng ta thật sự dùng (dựa trên JSON)
+from .routes import match_api 
+# Vô hiệu hóa các router dùng SQL hoặc data mẫu
+# from .routes import user_api, history_api, leaderboard_api
+# ===========================
+
 from .sockets.socket_server import router as websocket_router
 
 # Import service và bảo mật
@@ -26,10 +32,15 @@ app.add_middleware(
 
 # --- Gắn các router API ---
 # Vô hiệu hóa router auth cũ (dùng SQL) để dùng logic JSON bên dưới
-app.include_router(user_api.router, prefix="/api/users", tags=["Users"])
-app.include_router(history_api.router, prefix="/api/history", tags=["History"])
-app.include_router(leaderboard_api.router,
-                   prefix="/api/leaderboard", tags=["Leaderboard"])
+
+# ===== SỬA LỖI ỔN ĐỊNH (Vô hiệu hóa các router không dùng) =====
+# app.include_router(user_api.router, prefix="/api/users", tags=["Users"]) # <-- Dùng SQL
+# app.include_router(history_api.router, prefix="/api/history", tags=["History"]) # <-- Dùng SQL
+# app.include_router(leaderboard_api.router,
+#                    prefix="/api/leaderboard", tags=["Leaderboard"]) # <-- Dùng data mẫu
+# ========================================================
+
+# Các API này (match, stats, leaderboard) đều nằm trong match_api và DÙNG JSON
 app.include_router(match_api.router, tags=["Match"])
 # ✅ Gắn router WebSocket
 app.include_router(websocket_router, tags=["WebSocket"])

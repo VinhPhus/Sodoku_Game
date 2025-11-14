@@ -22,8 +22,10 @@ class MatchService:
             Dict chứa thông tin trận đấu và board
         """
         # Kiểm tra users có tồn tại
-        user = self.storage.get_user(user_id)
-        opponent = self.storage.get_user(opponent_id)
+        # ===== SỬA LỖI Ở ĐÂY =====
+        user = self.storage.get_user_by_id(user_id)
+        opponent = self.storage.get_user_by_id(opponent_id)
+        # =========================
 
         if not user or not opponent:
             raise HTTPException(status_code=404, detail="User not found")
@@ -121,9 +123,6 @@ class MatchService:
 
         # Lưu vào history
         self.storage.save_match_to_history(updated_match)
-
-        # Xóa khỏi active matches
-        self.storage.delete_match(match_id)
 
         return updated_match
 

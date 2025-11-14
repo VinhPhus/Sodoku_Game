@@ -1,4 +1,6 @@
-const socket = new WebSocket("ws://26.135.199.240:8000/ws/game");
+// ===== SỬA IP CỨNG Ở ĐÂY =====
+const socket = new WebSocket("ws://localhost:8000/ws/game");
+// =============================
 
 // Khi server chấp nhận kết nối
 socket.onopen = () => {

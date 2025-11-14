@@ -108,15 +108,15 @@ const AppContent = () => {
     // Khi nhận yêu cầu rematch
     socket.on("rematchRequested", (data) => {
       console.log("rematchRequested", data);
-      setRematchRequester(data.requester);
-      setPendingRematchData({
+      setRematchRequester(data.requester); // <-- Lưu thông tin người gửi
+      setPendingRematchData({ // <-- Lưu thông tin trận đấu
         matchId: data.matchId,
         difficulty: data.difficulty,
         requesterId: data.requester.id
       });
     });
 
-    // Khi rematch được chấp nhận
+    // Khi rematch được chấp nhận (cả 2 cùng nhận)
     socket.on("rematchAccepted", (data) => {
       console.log("rematchAccepted", data);
       const opponentData = {
@@ -126,17 +126,18 @@ const AppContent = () => {
         matchId: data.matchId
       };
       setOpponent(opponentData);
-      setScreen("matchSetup");
-      setRematchRequester(null);
+      setScreen("matchSetup"); // <-- CHUYỂN MÀN HÌNH VÀO TRẬN MỚI
+      setRematchRequester(null); // Đóng Dialog (nếu có)
       setPendingRematchData(null);
     });
 
-    // Khi rematch bị từ chối
+    // Khi rematch bị từ chối (chỉ User 1 nhận)
     socket.on("rematchDeclined", () => {
       console.log("rematchDeclined");
-      alert("Đối thủ đã từ chối yêu cầu chơi lại!");
+      alert("Đối thủ đã từ chối. Bạn sẽ được đưa về sảnh.");
       setRematchRequester(null);
       setPendingRematchData(null);
+      setScreen("lobby");
     });
 
     return () => {
@@ -227,8 +228,9 @@ const AppContent = () => {
         matchId: pendingRematchData.matchId
       });
     }
-    setRematchRequester(null);
+    setRematchRequester(null); // <-- Ẩn Dialog
     setPendingRematchData(null);
+    setScreen("lobby");
   };
 
   // --- Render screen ---

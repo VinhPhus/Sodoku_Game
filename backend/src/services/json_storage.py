@@ -61,6 +61,14 @@ class JSONStorage:
             if u["username"].lower() == username.lower():
                 return u
         return None
+    
+    def get_user_by_id(self, user_id: str) -> Optional[Dict]:
+        """Lấy user bằng ID"""
+        users = self._read_json(self.users_file)
+        for u in users:
+            if u.get("id") == user_id: # Dùng .get("id") để an toàn
+                return u
+        return None
 
     def get_all_users(self) -> List[Dict]:
         users = self._read_json(self.users_file)
@@ -117,7 +125,11 @@ class JSONStorage:
 
     def get_all_active_matches(self) -> List[Dict]:
         matches = self._read_json(self.matches_file)
-        return list(matches.values())
+        active_list = []
+        for match in matches.values():
+            if match.get("status") != "finished":
+                active_list.append(match)
+        return active_list
 
     # ========================= MATCH HISTORY =========================
 
