@@ -22,17 +22,6 @@ const mockResultData = {
     }
 };
 
-const ConfettiEmoji = () => (
-    <div style={{ fontSize: '2rem', marginBottom: '10px' }}>
-        🎉🎊🍾
-    </div>
-);
-const LoserEmoji = () => (
-    <div style={{ fontSize: '2rem', marginBottom: '10px' }}>
-        😔
-    </div>
-);
-
 const MatchResult = ({
     user = { name: 'YOU' },
     opponent = { name: 'PLAYER A' },
@@ -101,7 +90,7 @@ const MatchResult = ({
                     <span className="stat-value" style={{
                         fontWeight: 600,
                         color: data.timeCompleted === "Đầu hàng" ? 'var(--color-red)' :
-                            (data.timeCompleted === "-" ? '#999' : 'var(--color-primary)')
+                            (data.timeCompleted === "-" ? '#999' : 'var(--color-black)')
                     }}>
                         {data.timeCompleted === "-" ? "Chưa hoàn thành" : data.timeCompleted}
                     </span>

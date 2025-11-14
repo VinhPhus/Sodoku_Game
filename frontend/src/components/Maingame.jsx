@@ -229,11 +229,11 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
             // Hiển thị thông báo
             if (isWinner) {
                 setTimeout(() => {
-                    alert("🎉 Bạn thắng! Đối thủ đã đầu hàng hoặc bạn hoàn thành trước!");
+                    alert("You Win!");
                 }, 300);
             } else {
                 setTimeout(() => {
-                    alert("😔 Bạn thua! Đối thủ đã hoàn thành trước hoặc bạn đã đầu hàng!");
+                    alert("You Lose");
                 }, 300);
             }
 
@@ -425,13 +425,13 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
 
         // Kiểm tra giới hạn số lần gợi ý
         if (hintsUsed >= MAX_HINTS) {
-            alert(`⚠️ Bạn đã hết lượt gợi ý! (Tối đa ${MAX_HINTS} lần)`);
+            alert(`Bạn đã hết lượt gợi ý! (Tối đa ${MAX_HINTS} lần)`);
             return;
         }
 
         // Kiểm tra xem có ô sai không - phải sửa ô sai trước
         if (errorCells.size > 0) {
-            alert("⚠️ Bạn phải sửa lại ô sai (khung đỏ) trước khi dùng gợi ý!");
+            alert("Bạn phải sửa lại ô sai trước khi dùng gợi ý!");
             return;
         }
 
