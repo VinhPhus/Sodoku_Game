@@ -34,16 +34,13 @@ const AppContent = () => {
   const [currentDifficulty, setCurrentDifficulty] = useState('medium');
 
   // --- Khi login thành công ---
-  const handleAuthSuccess = (username) => {
-    // Tạo id duy nhất cho user
-    const userId = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    const newUser = { id: userId, username };
-    setUser(newUser);
+  const handleAuthSuccess = (authenticatedUser) => { //đối tượng {id, username} từ api login
+    setUser(authenticatedUser);
     setScreen("lobby");
 
     // Kết nối WebSocket với userId
     if (socket) {
-      socket.connect(userId, username);
+      socket.connect(authenticatedUser.id, authenticatedUser.username);
     }
   };
 

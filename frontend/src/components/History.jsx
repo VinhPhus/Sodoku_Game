@@ -8,6 +8,9 @@ const History = ({ user, onMenuClick, onBack }) => {
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
 
+  // Lấy API URL từ biến môi trường
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
   // Fetch history từ backend
   useEffect(() => {
     const fetchHistory = async () => {
@@ -20,19 +23,22 @@ const History = ({ user, onMenuClick, onBack }) => {
         setLoading(true);
         setError(null);
 
+        // ===== SỬA DÒNG NÀY =====
         // Gọi API lấy lịch sử trận đấu
-        const historyResponse = await fetch(`http://26.135.199.240:8000/api/match/history/${user.id}`);
+        const historyResponse = await fetch(`${API_URL}/api/match/history/${user.id}`);
         if (!historyResponse.ok) {
           throw new Error('Không thể tải lịch sử trận đấu');
         }
         const historyData = await historyResponse.json();
 
+        // ===== SỬA DÒNG NÀY =====
         // Gọi API lấy thống kê
-        const statsResponse = await fetch(`http://26.135.199.240:8000/api/match/stats/${user.id}`);
+        const statsResponse = await fetch(`${API_URL}/api/match/stats/${user.id}`);
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
           setStats(statsData);
         }
+        // =======================
 
         // Xử lý dữ liệu lịch sử
         const formattedHistory = historyData.matches.map(match => {
@@ -69,7 +75,7 @@ const History = ({ user, onMenuClick, onBack }) => {
     };
 
     fetchHistory();
-  }, [user]);
+  }, [user, API_URL]); // Thêm API_URL vào dependency array
 
   // Component con hiển thị từng dòng trận đấu
   const MatchItem = ({ match }) => {
