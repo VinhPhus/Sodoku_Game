@@ -2,6 +2,19 @@ import React from "react";
 import "../style/MatchResult.css";
 // Giả định icon confetti được thêm dưới dạng emoji hoặc một component SVG
 
+// ===== BẮT ĐẦU SỬA LỖI =====
+// Thêm định nghĩa cho 2 components bị thiếu
+
+const ConfettiEmoji = () => (
+    <span style={{ fontSize: '48px' }} role="img" aria-label="confetti">🎉</span>
+);
+
+const LoserEmoji = () => (
+    <span style={{ fontSize: '48px' }} role="img" aria-label="sad">😥</span>
+);
+
+// ===== KẾT THÚC SỬA LỖI =====
+
 // Dữ liệu giả lập cho màn hình kết quả
 // Format chuẩn: name, status, errors, timeCompleted
 const mockResultData = {

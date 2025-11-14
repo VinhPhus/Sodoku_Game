@@ -21,14 +21,14 @@ const History = ({ user, onMenuClick, onBack }) => {
         setError(null);
 
         // Gọi API lấy lịch sử trận đấu
-        const historyResponse = await fetch(`http://localhost:8000/api/match/history/${user.id}`);
+        const historyResponse = await fetch(`http://26.135.199.240:8000/api/match/history/${user.id}`);
         if (!historyResponse.ok) {
           throw new Error('Không thể tải lịch sử trận đấu');
         }
         const historyData = await historyResponse.json();
 
         // Gọi API lấy thống kê
-        const statsResponse = await fetch(`http://localhost:8000/api/match/stats/${user.id}`);
+        const statsResponse = await fetch(`http://26.135.199.240:8000/api/match/stats/${user.id}`);
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
           setStats(statsData);
