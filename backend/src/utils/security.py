@@ -1,16 +1,13 @@
+import hashlib
 from passlib.context import CryptContext
 
-# Tạo context để mã hóa và kiểm tra mật khẩu
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
-    """
-    Mã hóa mật khẩu bằng bcrypt.
-    """
-    return pwd_context.hash(password)
+    # SHA-256 digest luôn 32 bytes, an toàn cho bcrypt
+    pw_digest = hashlib.sha256(password.encode('utf-8')).digest()
+    return pwd_context.hash(pw_digest)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Kiểm tra mật khẩu gốc với mật khẩu đã mã hóa.
-    """
-    return pwd_context.verify(plain_password, hashed_password)
+    pw_digest = hashlib.sha256(plain_password.encode('utf-8')).digest()
+    return pwd_context.verify(pw_digest, hashed_password)
