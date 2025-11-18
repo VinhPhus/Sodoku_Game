@@ -193,11 +193,27 @@ body {
   height: 100%;
   background-color: #4a90e2; /* Màu xanh dương */
   border-radius: 4px;
-  transition: width 0.5s ease-in-out;
+  
+  /* === THAY ĐỔI Ở ĐÂY === */
+  /* Bắt đầu với chiều rộng 0% */
+  width: 0%; 
+  /* Gọi animation đã tạo, chạy trong 3 giây, chạy 1 lần */
+  animation: fillProgressBar 3s linear 1 forwards;
+  /* 'linear' = chạy đều, 'forwards' = giữ ở 100% khi xong */
 }
 
 .connection-text {
   font-size: 14px;
   color: #666;
   margin: 0;
+}
+
+/* Thêm vào cuối file */
+@keyframes fillProgressBar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
 }

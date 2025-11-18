@@ -185,22 +185,18 @@
 
 /* Phân chia 3x3 block */
 .cell:nth-child(3n) {
-  border-right-width: 2px;
+  border-right: 3px solid var(--text-primary) !important;
 }
 
 .cell:nth-child(9n) {
-  border-right-width: 1px;
+  border-right: 1px solid #ddd !important;
 }
 
-.sudoku-row:nth-child(3) .cell,
-.sudoku-row:nth-child(6) .cell {
-  border-bottom-width: 3px !important;
-}
 
-.sudoku-row:nth-child(9) .cell {
-  border-bottom: 1px solid #ddd !important;
-  /* Đảm bảo ô cuối cùng có viền dưới */
-  /* Do border: 3px solid var(--text-primary) của .sudoku-grid đã bao bọc */
+
+.cell:nth-child(n+19):nth-child(-n+27),
+.cell:nth-child(n+46):nth-child(-n+54) {
+  border-bottom: 3px solid var(--text-primary) !important;
 }
 
 /* Nốt bút chì (Pencil marks) */
@@ -435,6 +431,9 @@
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
+  
+  background-color: var(--bg-card); /* Đặt nền thành màu trắng */
+  color: var(--text-primary);       /* Đặt chữ thành màu đen */
 }
 
 .chat-send-btn {
