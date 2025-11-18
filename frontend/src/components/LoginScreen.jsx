@@ -93,7 +93,7 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }) => {
         Chưa có tài khoản? Đăng ký
       </button>
 
-      <p className="footer-text">Version 1.0.0 | Developed by: Team A </p>
+      <p className="footer-text">Version 1.0.0 | Developed by: Group 5 </p>
     </div>
   );
 };
