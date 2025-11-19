@@ -22,9 +22,6 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections[user_id] = websocket
 
-        # Thêm hoặc cập nhật user vào storage
-        # (Đã xóa logic add_user sai ở đây)
-
     def disconnect(self, user_id: str):
         """Ngắt kết nối"""
         if user_id in self.active_connections:
@@ -48,7 +45,7 @@ class ConnectionManager:
         """Lấy danh sách người chơi online"""
         players = []
         for user_id in self.active_connections.keys():
-            user = self.storage.get_user_by_id(user_id) # <-- ĐÃ SỬA (1)
+            user = self.storage.get_user_by_id(user_id)
             if user:
                 players.append({
                     'id': user['id'],
@@ -75,7 +72,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
         # Kết nối user
         manager.active_connections[user_id] = websocket
-        # (Đã xóa logic add_user sai ở đây)
 
         # Gửi danh sách người chơi online cho tất cả
         online_players = manager.get_online_players()
@@ -99,9 +95,9 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
             elif event == 'sendChallenge':
                 opponent_id = data.get('opponentId')
-                challenger = manager.storage.get_user_by_id(user_id) # <-- ĐÃ SỬA (2)
+                challenger = manager.storage.get_user_by_id(user_id)
                 
-                if not challenger: # Thêm kiểm tra
+                if not challenger:
                     continue
 
                 await manager.send_personal_message({
@@ -123,10 +119,10 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                     difficulty=data.get('difficulty', 'medium')
                 )
 
-                challenger = manager.storage.get_user_by_id(challenger_id) # <-- ĐÃ SỬA (3)
-                accepter = manager.storage.get_user_by_id(user_id)     # <-- ĐÃ SỬA (4)
+                challenger = manager.storage.get_user_by_id(challenger_id)
+                accepter = manager.storage.get_user_by_id(user_id)
 
-                if not challenger or not accepter: # Thêm kiểm tra
+                if not challenger or not accepter:
                     continue
 
                 # Thông báo cho người thách đấu
@@ -170,8 +166,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                         'event': 'matchStarted',
                         'matchId': match_id,
                         'match': match,
-                        'board': match.get('board'),  # Gửi puzzle chung
-                        # Gửi solution để validate
+                        'board': match.get('board'),
                         'solution': match.get('solution')
                     }, player_id)
 
@@ -184,38 +179,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                     match_id, user_id, progress, errors
                 )
 
-            elif event == 'rematchRequest':
-                # Người chơi yêu cầu chơi lại
-                match_id = data.get('matchId')
-                difficulty = data.get('difficulty', 'medium')
-
-                # Lấy thông tin trận đấu để tìm đối thủ
-                match = manager.storage.get_match(match_id)
-                if not match:
-                    continue
-
-                # Xác định đối thủ
-                opponent_id = None
-                if match['player1_id'] == user_id:
-                    opponent_id = match['player2_id']
-                elif match['player2_id'] == user_id:
-                    opponent_id = match['player1_id']
-
-                # Lấy thông tin người yêu cầu rematch
-                requester = manager.storage.get_user_by_id(user_id) # <-- Đã sửa ở lần trước
-
-                # Gửi yêu cầu rematch cho đối thủ
-                if opponent_id and requester:
-                    await manager.send_personal_message({
-                    'event': 'opponentProgress',
-                    'progress': progress,            # <-- Dòng 2: SỬ DỤNG
-                    'errors': errors
-                }, opponent_id)
-
                 # Thông báo cho đối thủ
                 opponent_id = (match['player2_id'] if match['player1_id'] == user_id
                                else match['player1_id'])
-
+                
+                # Gửi cập nhật tiến độ cho đối thủ
                 await manager.send_personal_message({
                     'event': 'opponentProgress',
                     'progress': progress,
@@ -225,19 +193,18 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             elif event == 'finishMatch':
                 match_id = data.get('matchId')
                 winner_id = data.get('winnerId')
-                # Thời gian hoàn thành (giây)
                 completion_time = data.get('completionTime', 0)
 
-                # Lấy thông tin match để xác định player nào hoàn thành
+                # Lấy thông tin match
                 match = manager.match_service.get_match(match_id)
 
-                # Xác định thời gian cho từng người chơi
+                # Xác định thời gian
                 if match['player1_id'] == winner_id:
-                    player1_time = completion_time  # Người thắng - thời gian thực
-                    player2_time = "-"  # Người thua - chưa hoàn thành
+                    player1_time = completion_time
+                    player2_time = "-"
                 else:
-                    player1_time = "-"  # Người thua - chưa hoàn thành
-                    player2_time = completion_time  # Người thắng - thời gian thực
+                    player1_time = "-"
+                    player2_time = completion_time
 
                 result = manager.match_service.finish_match(
                     match_id, winner_id, player1_time, player2_time
@@ -255,7 +222,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                 result = manager.match_service.player_surrender(
                     match_id, user_id)
 
-                # Thông báo cho cả 2 người chơi
                 for player_id in [result['player1_id'], result['player2_id']]:
                     await manager.send_personal_message({
                         'event': 'matchFinished',
@@ -267,24 +233,20 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                 message_text = data.get('message')
 
                 if not match_id or not message_text:
-                    continue  # Bỏ qua nếu thiếu data
+                    continue
 
-                # Lấy thông tin trận đấu để tìm đối thủ
                 match = manager.storage.get_match(match_id)
                 if not match:
                     continue
 
-                # Xác định đối thủ
                 opponent_id = None
                 if match['player1_id'] == user_id:
                     opponent_id = match['player2_id']
                 elif match['player2_id'] == user_id:
                     opponent_id = match['player1_id']
 
-                # Lấy thông tin người gửi
-                sender = manager.storage.get_user_by_id(user_id) # <-- ĐÃ SỬA (5)
+                sender = manager.storage.get_user_by_id(user_id)
 
-                # Gửi tin nhắn cho đối thủ
                 if opponent_id and sender:
                     await manager.send_personal_message({
                         'event': 'chatMessageReceived',
@@ -296,26 +258,22 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                     }, opponent_id)
 
             elif event == 'rematchRequest':
-                # Người chơi yêu cầu chơi lại
+                # --- ĐÂY LÀ ĐOẠN CODE ĐÚNG ---
                 match_id = data.get('matchId')
                 difficulty = data.get('difficulty', 'medium')
 
-                # Lấy thông tin trận đấu để tìm đối thủ
                 match = manager.storage.get_match(match_id)
                 if not match:
                     continue
 
-                # Xác định đối thủ
                 opponent_id = None
                 if match['player1_id'] == user_id:
                     opponent_id = match['player2_id']
                 elif match['player2_id'] == user_id:
                     opponent_id = match['player1_id']
 
-                # Lấy thông tin người yêu cầu rematch
-                requester = manager.storage.get_user_by_id(user_id) # <-- ĐÃ SỬA (6)
+                requester = manager.storage.get_user_by_id(user_id)
 
-                # Gửi yêu cầu rematch cho đối thủ
                 if opponent_id and requester:
                     await manager.send_personal_message({
                         'event': 'rematchRequested',
@@ -328,24 +286,22 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                     }, opponent_id)
 
             elif event == 'rematchResponse':
-                # Đối thủ phản hồi yêu cầu chơi lại
                 requester_id = data.get('requesterId')
                 accepted = data.get('accepted', False)
                 match_id = data.get('matchId')
                 difficulty = data.get('difficulty', 'medium')
 
                 if accepted:
-                    # Tạo trận đấu mới
                     new_match = manager.match_service.create_match(
                         user_id=requester_id,
                         opponent_id=user_id,
                         difficulty=difficulty
                     )
 
-                    requester = manager.storage.get_user_by_id(requester_id) # <-- Đã sửa
-                    accepter = manager.storage.get_user_by_id(user_id)     # <-- Đã sửa
+                    requester = manager.storage.get_user_by_id(requester_id)
+                    accepter = manager.storage.get_user_by_id(user_id)
 
-                    if not requester or not accepter: # Thêm kiểm tra
+                    if not requester or not accepter:
                         continue
 
                     # Thông báo cho người yêu cầu (User 1)
@@ -370,7 +326,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                         }
                     }, user_id)
                 else:
-                    # Từ chối rematch
                     await manager.send_personal_message({
                         'event': 'rematchDeclined'
                     }, requester_id)
@@ -378,13 +333,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     except WebSocketDisconnect:
         manager.disconnect(user_id)
 
-        # Thông báo người chơi đã thoát
         await manager.broadcast({
             'event': 'onlinePlayers',
             'players': manager.get_online_players()
         })
 
-        # Nếu đang trong trận đấu, thông báo đối thủ
         active_matches = manager.storage.get_all_active_matches()
         for match in active_matches:
             if user_id in [match['player1_id'], match['player2_id']]:
