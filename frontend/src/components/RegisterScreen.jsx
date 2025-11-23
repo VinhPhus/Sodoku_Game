@@ -82,14 +82,19 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
           placeholder="Enter your name"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          maxLength={30}
         />
+          <span className="input-helper-text">Tối đa 30 kí tự</span>
+
         <input
           type="password"
           className="name-input"
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          maxLength={20}
         />
+        <span className="input-helper-text">Tối đa 20 kí tự</span>
         <input
           type="password"
           className="name-input"
@@ -106,7 +111,7 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
         Đã có tài khoản? Đăng nhập
       </button>
 
-      <p className="footer-text">Version 1.0.0 | Developed by: Team A </p>
+      <p className="footer-text">Version 1.0.0 | Developed by: Nhóm 5 </p>
     </div>
   );
 };

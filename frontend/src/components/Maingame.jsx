@@ -130,6 +130,9 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
     const [opponentErrors, setOpponentErrors] = useState(0);
     const [opponentProgress, setOpponentProgress] = useState(0);
 
+    // ===== GIỚI HẠN LỖI =====
+    const MAX_ALLOWED_ERRORS = 5;
+
     // Sử dụng board từ server nếu có, nếu không thì tạo mới (fallback)
     const [gameData] = useState(() => {
         if (serverBoard && serverSolution) {
@@ -277,20 +280,26 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
         if (defaultCells.has(`${row}-${col}`)) return; // Không cho chọn ô mặc định
         if (gameWon) return; // Không cho chơi nữa nếu đã thắng
 
-        // Kiểm tra xem có ô sai nào đang tồn tại không
-        if (errorCells.size > 0) {
-            // Chỉ cho phép chọn ô sai để sửa
-            const cellKey = `${row}-${col}`;
-            if (errorCells.has(cellKey)) {
-                setSelectedCell({ row, col });
-            } else {
-                // Thông báo phải sửa ô sai trước
-                alert("Xóa ô sai để tiếp tục!");
-            }
-            return;
-        }
 
+        // Cho phép chọn tự do để trải nghiệm tốt hơn (vẫn kiểm soát bằng MAX ERROR)
         setSelectedCell({ row, col });
+    };
+
+    // Hàm xử lý khi thua do quá lỗi
+    const triggerLossByErrors = (finalTime) => {
+        setGameWon(true); // Khóa bàn cờ
+        alert(`Bạn đã phạm quá ${MAX_ALLOWED_ERRORS} lỗi! Bạn đã thua cuộc.`);
+
+        if (socket && matchId) {
+            // Gửi thông báo kết thúc trận với người thắng là đối thủ
+            socket.emit("finishMatch", {
+                matchId,
+                winnerId: opponent ? opponent.id : "bot", // Nếu chơi với bot thì bot thắng
+                completionTime: finalTime,
+                player1Time: "-", // Người thua không có thời gian hoàn thành
+                player2Time: "-"
+            });
+        }
     };
 
     const handleNumberInput = (number) => {
@@ -309,88 +318,86 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
                 newMarks[cellKey] = new Set();
             }
 
-            // Toggle: thêm hoặc xóa số
             if (newMarks[cellKey].has(number)) {
                 newMarks[cellKey].delete(number);
             } else {
                 newMarks[cellKey].add(number);
             }
 
-            // Xóa nếu rỗng
             if (newMarks[cellKey].size === 0) {
                 delete newMarks[cellKey];
             }
 
             setPencilMarks(newMarks);
-            return; // Không cập nhật board
+            return;
         }
 
-        // **CHẾ ĐỘ THƯỜNG (ĐIỀN SỐ CHÍNH THỨC)**
+        // **CHẾ ĐỘ THƯỜNG**
         const newBoard = board.map(r => [...r]);
         newBoard[row][col] = number;
 
-        // Kiểm tra nước đi có hợp lệ không
+        // Logic tính lỗi: Dựa trên Set để không cộng dồn
         const newErrorCells = new Set(errorCells);
-
-        // Xóa pencil marks khi điền số chính thức
+        
+        // Xóa pencil marks
         const newMarks = { ...pencilMarks };
         delete newMarks[cellKey];
 
         if (number !== 0) {
-            // Kiểm tra với solution
             if (solution[row][col] !== number) {
-                // Sai rồi! Giữ nguyên khung đỏ và không cho chơi tiếp
+                // SAI: Thêm vào danh sách lỗi (Set sẽ tự loại bỏ trùng lặp)
                 newErrorCells.add(cellKey);
-                setErrors(prev => prev + 1);
-
-                // Không cập nhật board nếu đang sai
-                setErrorCells(newErrorCells);
-                setBoard(newBoard); // Vẫn cập nhật board để hiện số sai
-                setPencilMarks(newMarks);
-
-                // Không cho chọn ô khác hoặc điền số khác cho đến khi sửa
-                return; // Dừng tại đây, không cho thực hiện nước đi tiếp
             } else {
-                // Đúng! Xóa khỏi danh sách lỗi nếu có
+                // ĐÚNG: Xóa khỏi danh sách lỗi nếu trước đó sai
                 newErrorCells.delete(cellKey);
             }
         } else {
-            // Xóa số - xóa khỏi danh sách lỗi
+            // Xóa số: Xóa khỏi danh sách lỗi
             newErrorCells.delete(cellKey);
         }
 
+        // Cập nhật State
         setBoard(newBoard);
         setErrorCells(newErrorCells);
         setPencilMarks(newMarks);
-        // Kiểm tra xem đã thắng chưa
-        if (checkWin(newBoard)) {
+
+        // Cập nhật số lỗi hiển thị = kích thước của Set lỗi
+        const currentErrorCount = newErrorCells.size;
+        setErrors(currentErrorCount);
+
+        // Gửi tiến độ (bao gồm số lỗi mới)
+        if (socket && matchId) {
+            socket.emit("updateProgress", {
+                matchId,
+                progress: calculateProgress(newBoard),
+                errors: currentErrorCount
+            });
+        }
+
+        // KIỂM TRA THUA CUỘC DO LỖI
+        if (currentErrorCount > MAX_ALLOWED_ERRORS) {
+            triggerLossByErrors(timer);
+            return; // Dừng xử lý tiếp
+        }
+
+        // Kiểm tra thắng cuộc
+        if (newErrorCells.size === 0 && checkWin(newBoard)) {
             setGameWon(true);
-            const completionTime = timer; // Lưu thời gian hoàn thành (giây)
+            const completionTime = timer;
             setTimeout(() => {
                 if (socket && matchId) {
                     socket.emit("finishMatch", {
                         matchId,
                         winnerId: user.id,
-                        completionTime: completionTime, // Gửi thời gian hoàn thành (số giây)
+                        completionTime: completionTime,
                         player1Time: formatTime(completionTime),
-                        player2Time: "-" // Đối thủ chưa hoàn thành
+                        player2Time: "-"
                     });
                 }
-                // Server sẽ gửi matchFinished event cho cả 2 người
-                // Event listener sẽ xử lý việc chuyển màn hình
             }, 500);
-        } else {
-            // Gửi tiến độ lên server
-            if (socket && matchId) {
-                socket.emit("updateProgress", {
-                    matchId,
-                    progress: calculateProgress(newBoard),
-                    errors: errors
-                });
-            }
         }
 
-        // Xóa ô được chọn sau khi điền
+        // Xóa ô được chọn
         setSelectedCell(null);
     };
 
@@ -401,56 +408,60 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
 
         if (defaultCells.has(cellKey)) return;
 
-        // Xóa số (cho phép xóa cả ô sai để sửa lại)
+        // Xóa số
         const newBoard = board.map(r => [...r]);
         newBoard[row][col] = 0;
         setBoard(newBoard);
 
-        // Xóa khỏi danh sách lỗi
+        // Xóa khỏi danh sách lỗi -> Giảm lỗi
         const newErrorCells = new Set(errorCells);
         newErrorCells.delete(cellKey);
         setErrorCells(newErrorCells);
+        
+        // Cập nhật biến errors
+        const currentErrorCount = newErrorCells.size;
+        setErrors(currentErrorCount);
 
         // Xóa pencil marks
         const newMarks = { ...pencilMarks };
         delete newMarks[cellKey];
         setPencilMarks(newMarks);
 
-        // Vẫn giữ ô được chọn để có thể điền số mới
-        // setSelectedCell(null);
+        // Gửi tiến độ (để cập nhật số lỗi giảm cho đối thủ thấy)
+        if (socket && matchId) {
+            socket.emit("updateProgress", {
+                matchId,
+                progress: calculateProgress(newBoard),
+                errors: currentErrorCount
+            });
+        }
     };
 
     const handleHint = () => {
         if (gameWon) return;
 
-        // Kiểm tra giới hạn số lần gợi ý
         if (hintsUsed >= MAX_HINTS) {
             alert(`Bạn đã hết lượt gợi ý! (Tối đa ${MAX_HINTS} lần)`);
             return;
         }
 
-        // Kiểm tra xem có ô sai không - phải sửa ô sai trước
         if (errorCells.size > 0) {
             alert("Bạn phải sửa lại ô sai trước khi dùng gợi ý!");
             return;
         }
 
-        // Tìm ô trống đầu tiên
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
                 const cellKey = `${i}-${j}`;
                 if (!defaultCells.has(cellKey) && board[i][j] === 0) {
-                    // Điền số đúng từ solution
                     const newBoard = board.map(r => [...r]);
                     newBoard[i][j] = solution[i][j];
                     setBoard(newBoard);
                     setHintsUsed(prev => prev + 1);
 
-                    // Highlight ô vừa gợi ý
                     setSelectedCell({ row: i, col: j });
                     setTimeout(() => setSelectedCell(null), 1500);
 
-                    // Gửi tiến độ
                     if (socket && matchId) {
                         socket.emit("updateProgress", {
                             matchId,
@@ -458,17 +469,14 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
                             errors: errors
                         });
                     }
-
                     return;
                 }
             }
         }
-
         alert("Không còn gợi ý nào!");
     };
 
     const checkWin = (currentBoard) => {
-        // Kiểm tra tất cả ô đã điền đúng
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
                 if (currentBoard[i][j] !== solution[i][j]) {
@@ -491,44 +499,33 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
 
     const handleSurrender = () => {
         if (window.confirm("Bạn có chắc muốn đầu hàng?")) {
-            setGameWon(true); // Khóa game để không chơi tiếp
-
+            setGameWon(true);
             if (socket && matchId) {
                 socket.emit("surrender", { matchId });
-
-                // Tạo kết quả đầu hàng (dù server sẽ gửi lại,
-                // chúng ta không cần tự gọi onFinish ở đây nữa)
-
-                // Server sẽ gửi matchFinished event cho cả 2 người
-                // Event listener (handleMatchFinished) sẽ xử lý và gọi onFinish
             }
         }
     };
 
     const handleFinish = () => {
-        // Kiểm tra xem đã hoàn thành đúng chưa
         if (!checkWin(board)) {
             alert("Bạn chưa hoàn thành đúng! Còn ô sai hoặc ô trống.");
             return;
         }
 
         setGameWon(true);
-        const completionTime = timer; // Lưu thời gian hoàn thành
+        const completionTime = timer;
 
         if (socket && matchId) {
             socket.emit("finishMatch", {
                 matchId,
                 winnerId: user.id,
-                completionTime: completionTime, // Gửi thời gian hoàn thành (số giây)
+                completionTime: completionTime,
                 player1Time: formatTime(completionTime),
-                player2Time: "-" // Đối thủ chưa hoàn thành
+                player2Time: "-"
             });
         }
-        // Server sẽ gửi matchFinished event cho cả 2 người
-        // Event listener (handleMatchFinished) sẽ xử lý việc chuyển màn hình
     };
 
-    // Hàm gửi tin nhắn (đặt bên ngoài useEffect)
     const handleSendChat = () => {
         if (!socket || !matchId || currentMessage.trim() === "") return;
 
@@ -537,16 +534,12 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
             message: currentMessage.trim()
         };
 
-        // 1. Gửi lên server
         socket.emit("chatMessage", {
             matchId: matchId,
             message: currentMessage.trim()
         });
 
-        // 2. Thêm vào lịch sử chat của chính mình (để hiển thị ngay)
         setChatHistory(prev => [...prev, { ...messageData, isSender: true }]);
-
-        // 3. Xóa input
         setCurrentMessage("");
     };
 
@@ -558,7 +551,9 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
                     <div className="header-logo">Sudoku Battle</div>
                     <div className="score-board">
                         <span>Lỗi:</span>
-                        <span>{errors}</span>
+                        <span>
+                            {errors}
+                        </span>
                     </div>
                 </div>
 
@@ -671,33 +666,47 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
                         <div className="player-score-item">
                             <div className="player-info-min">
                                 <span className="player-name-min">
-                                    {user?.username || 'Bạn'} (Lỗi: {errors})
+                                    {user?.username || 'Bạn'} (Lỗi: {errors}/{MAX_ALLOWED_ERRORS})
                                 </span>
                                 <span className="player-time-min">{formatTime(timer)}</span>
                             </div>
                             <div className="progress-bar-min">
-                                <div className="progress-fill" style={{ width: `${calculateProgress(board)}%` }}></div>
-                            </div>
-                        </div>
+                                <div className="progress-fill" 
+                                    style={{ 
+                        // Tính % dựa trên số lỗi
+                        width: `${Math.min((errors / MAX_ALLOWED_ERRORS) * 100, 100)}%`,
+                        // Đổi màu sang đỏ để cảnh báo (tùy chọn)
+                        backgroundColor: '#4d8bffff' 
+                    }}
+                ></div>
+            </div>
+        </div>
 
-                        <div className="player-score-item">
-                            <div className="player-info-min">
-                                <span className="player-name-min">
-                                    {opponent?.username || 'Đối thủ'} (Lỗi: {opponentErrors})
-                                </span>
-                                <span className="player-time-min">Đang chơi...</span>
-                            </div>
-                            <div className="progress-bar-min">
-                                <div className="progress-fill" style={{ width: `${opponentProgress}%` }}></div>
-                            </div>
-                        </div>
-                    </div>
-
+        {/* === PHẦN CỦA ĐỐI THỦ === */}
+        <div className="player-score-item">
+            <div className="player-info-min">
+                <span className="player-name-min">
+                    {opponent?.username || 'Đối thủ'} (Lỗi: {opponentErrors}/{MAX_ALLOWED_ERRORS})
+                </span>
+                <span className="player-time-min">Đang chơi...</span>
+            </div>
+            {/* Sửa thanh loading tại đây */}
+            <div className="progress-bar-min">
+                <div 
+                    className="progress-fill" 
+                    style={{ 
+                        // Sử dụng opponentErrors thay vì board của người chơi
+                        width: `${Math.min((opponentErrors / MAX_ALLOWED_ERRORS) * 100, 100)}%`,
+                        backgroundColor: '#4d8bffff'
+                    }}
+                ></div>
+            </div>
+        </div>
+    </div>
                     {/* Chat Card */}
                     <div className="chat-card">
                         <h3>Chat</h3>
-                        <div className="chat-box" ref={chatBoxRef}> {/* Thêm ref vào đây */}
-                            {/* --- NỘI DUNG CHAT-BOX ĐÃ CẬP NHẬT --- */}
+                        <div className="chat-box" ref={chatBoxRef}>
                             {chatHistory.length === 0 ? (
                                 <p style={{ color: '#999', fontSize: '13px', margin: 'auto', textAlign: 'center' }}>
                                     Bắt đầu cuộc trò chuyện...
@@ -722,14 +731,14 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
                                 type="text"
                                 className="chat-input"
                                 placeholder="Nhập tin nhắn..."
-                                value={currentMessage} // <-- Cập nhật
-                                onChange={e => setCurrentMessage(e.target.value)} // <-- Cập nhật
-                                onKeyPress={e => e.key === 'Enter' && handleSendChat()} // <-- Thêm: Gửi bằng Enter
-                                disabled={gameWon} // <-- Bỏ 'disabled' cứng
+                                value={currentMessage}
+                                onChange={e => setCurrentMessage(e.target.value)}
+                                onKeyPress={e => e.key === 'Enter' && handleSendChat()}
+                                disabled={gameWon}
                             />
                             <button
                                 className="chat-send-btn"
-                                onClick={handleSendChat} // <-- Cập nhật
+                                onClick={handleSendChat}
                                 disabled={gameWon || currentMessage.trim() === ""}
                             >
                                 ⮞

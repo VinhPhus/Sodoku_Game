@@ -186,6 +186,17 @@ html {
   margin-top: 2rem;
 }
 
+.input-helper-text {
+  font-size: 0.75rem; /* Khoảng 12px */
+  color: #c1c3c5;     /* Màu xám nhạt */
+  text-align: right;   /* Căn trái */
+  margin-top: -10px; /* Kéo lên gần input phía trên */
+  margin-bottom: 0.5px; /* Tăng khoảng cách dưới một chút để thoáng hơn */
+  margin-right: 7px;   /* Thụt đầu dòng một chút cho thẳng hàng */
+  font-weight: 100;
+  display: block;      /* Đảm bảo nằm trên một dòng riêng */
+}
+
 /* --- Responsive cho điện thoại (Giữ nguyên) --- */
 @media (max-width: 480px) {
   .login-card {

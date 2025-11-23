@@ -393,6 +393,7 @@
   background-color: var(--color-blue);
   border-radius: 4px;
   width: 60%;
+  transition: width 0.25s 
   /* Tùy chỉnh theo tiến độ */
 }
 
