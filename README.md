@@ -76,8 +76,6 @@ Uvicorn – Web server chạy FastAPI ở chế độ bất đồng bộ.
 
 SQLAlchemy – ORM quản lý truy cập cơ sở dữ liệu.
 
-SQLite – Cơ sở dữ liệu nhẹ, dễ triển khai.
-
 WebSocket (websockets hoặc fastapi[websockets]) – Giao tiếp liên tục giữa client và server.
 
 Pydantic – Kiểm tra dữ liệu vào/ra (request/response).
@@ -91,8 +89,6 @@ ReactJS – Xây dựng giao diện động, component hóa bảng Sudoku.
 Axios / Fetch API – Gửi request REST (đăng nhập, lấy lịch sử).
 
 WebSocket API – Giao tiếp trực tiếp khi chơi thách đấu.
-
-Tailwind CSS / Bootstrap – Giao diện đẹp, responsive.
 
 LocalStorage / React State – Lưu thông tin người chơi và thời gian tạm thời.
 
