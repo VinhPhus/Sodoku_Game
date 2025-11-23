@@ -10,5 +10,11 @@
     "username": "Hiền",
     "hashed_password": "$2b$12$qUGjgfcdWXp.XPhU6W7TRu2tkYTISsJG.jbpG59sh6db4S/CHAxcG",
     "created_at": "2025-11-19T10:54:44.257980"
+  },
+  {
+    "id": "59cd2ea2-8b17-4e0a-9d79-c0b630a474bf",
+    "username": "tiennguyen",
+    "hashed_password": "$2b$12$pQfTbd92rPk9CjWDi/ySCuJ8AHN6UY5sziqcxrSDnpcA.hvm7q0Jm",
+    "created_at": "2025-11-23T13:07:55.921953"
   }
 ]

@@ -8,7 +8,7 @@ uvicorn
 sqlalchemy
 pydantic
 python-dotenv
-passlib
+bcrypt
 websockets
 pytest
 httpx
