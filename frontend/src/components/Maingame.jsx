@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSocket } from "../context/SocketContext";
 import "../style/Maingame.css";
 
+import SurrenderDialog from "./SurrenderDialog";
 // ===== SUDOKU LOGIC FUNCTIONS =====
 
 // Hàm kiểm tra số có hợp lệ tại vị trí (row, col)
@@ -155,7 +156,7 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
     const [errorCells, setErrorCells] = useState(new Set());
     const [hintsUsed, setHintsUsed] = useState(0);
     const [gameWon, setGameWon] = useState(false);
-
+    const [showSurrenderDialog, setShowSurrenderDialog] = useState(false);
     // Giới hạn số lần gợi ý
     const MAX_HINTS = 3;
 
@@ -498,12 +499,22 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
     };
 
     const handleSurrender = () => {
-        if (window.confirm("Bạn có chắc muốn đầu hàng?")) {
-            setGameWon(true);
-            if (socket && matchId) {
-                socket.emit("surrender", { matchId });
-            }
+        if (!gameWon) {
+            setShowSurrenderDialog(true);
         }
+    };
+
+    const handleAcceptSurrender = () => {
+        setShowSurrenderDialog(false); // Đóng modal
+        setGameWon(true); // Khóa bàn cờ
+        
+        if (socket && matchId) {
+            socket.emit("surrender", { matchId });
+        }
+    };
+
+    const handleCancelSurrender = () => {
+        setShowSurrenderDialog(false); // Đóng modal
     };
 
     const handleFinish = () => {
@@ -747,6 +758,12 @@ const Maingame = ({ user, opponent, matchId, serverBoard, serverSolution, onFini
                     </div>
                 </aside>
             </div>
+            {showSurrenderDialog && (
+                <SurrenderDialog
+                    onAccept={handleAcceptSurrender}
+                    onCancel={handleCancelSurrender}
+                />
+            )}
         </div>
     );
 };
